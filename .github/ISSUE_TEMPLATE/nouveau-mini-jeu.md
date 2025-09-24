@@ -11,8 +11,10 @@ assignees: ''
 *Décrivez ici l'idée du mini-jeu, les règle, la ou les map qui seraient à faire, [...]*
 
 ## Requis pour l'exécution du mini-jeu
-`Nombre de personnes minimales` : X personnes
-`Nombre de personnes maximales` : Y personnes
+`Nombre de joueurs minimal` : X joueur(s) 
+`Nombre de joueurs maximal` : Y joueur(s) 
+`Nombre de spectateurs minimal` : X spectateur(s) 
+`Nombre de spectateurs maximal` : Y spectateur(s)
 
 *Ajoutez ici d'autres paramètres externe au jeu qui sont requis pour y joué. Par exemple :*
 - Nombre de joueurs paires
