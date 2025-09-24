@@ -11,21 +11,21 @@ assignees: ''
 *Décrivez ici l'idée du mini-jeu, les règle, la ou les map qui seraient à faire, [...]*
 
 ## Paramètres externe pour l'exécution du mini-jeu
-`Nombre de joueurs minimal` : X joueur(s) 
-`Nombre de joueurs maximal` : Y joueur(s) 
-`Nombre de spectateurs minimal` : X spectateur(s) 
-`Nombre de spectateurs maximal` : Y spectateur(s)
 
 *Ajoutez ici d'autres paramètres externe au jeu qui sont requis pour y joué. Par exemple :*
+- `Nombre de joueurs minimal` : X joueur(s) 
+- `Nombre de joueurs maximal` : Y joueur(s) 
+- `Nombre de spectateurs minimal` : X spectateur(s) 
+- `Nombre de spectateurs maximal` : Y spectateur(s)
 - Nombre de joueurs paires
 - Besoin que le bot Arisoutre soit connecté
 - Certaine periode de l'année (mini-jeu a theme)
 - [...]*
 
 ## Paramètres interne pour l'exécution du mini-jeu
-`Nombre de maps requise (hors esthétique` : X maps 
 
 *Ajoutez ici des paramètres interne au jeu qui sont requis pour y joué. Par exemple :*
+- `Nombre de maps requise (hors esthétique` : X maps 
 - Collision entre les joueurs
 - Invisibilité des pseudos
 - Désactivation du PvP
