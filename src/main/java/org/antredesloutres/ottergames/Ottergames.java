@@ -3,6 +3,7 @@ package org.antredesloutres.ottergames;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.NonNull;
 
 public final class Ottergames extends JavaPlugin {
 
@@ -19,7 +20,7 @@ public final class Ottergames extends JavaPlugin {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NonNull CommandSender sender, Command command, @NonNull String label, String @NonNull [] args) {
         if (command.getName().equalsIgnoreCase("otter")) {
             sender.sendMessage("§bHello from Ottergames!");
             return true;
