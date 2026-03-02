@@ -1,4 +1,44 @@
-build
-/.gradle
-/.idea
-/.github
+# --- Gradle ---
+.gradle/
+build/
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+out/
+
+# --- Eclipse ---
+.settings/
+.classpath
+.project
+bin/
+
+# --- Visual Studio Code ---
+.vscode/
+
+# --- Minecraft Server (run-paper) ---
+# This ignores the server folder created when you run ./gradlew runServer
+run/
+usercache.json
+whitelist.json
+banned-players.json
+banned-ips.json
+ops.json
+server.properties
+eula.txt
+logs/
+world/
+world_nether/
+world_the_end/
+plugins/
+cache/
+libraries/
+versions/
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Other ---
+.github
