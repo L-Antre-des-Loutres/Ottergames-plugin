@@ -12,8 +12,8 @@ public class CommandHandler {
         this.plugin = plugin;
     }
 
-    public void init() {
-        // Enregistrement de la commande
+    public void setup() {
+        // Registering
         Objects.requireNonNull(plugin.getCommand("otter")).setExecutor(new Otter());
     }
 }

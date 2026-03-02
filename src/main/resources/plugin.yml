@@ -1,6 +1,6 @@
 name: ottergames
 version: '1.0-SNAPSHOT'
-main: org.antredesloutres.ottergames.Ottergames
+main: org.antredesloutres.ottergames.Main
 api-version: '1.21'
 load: STARTUP
 
