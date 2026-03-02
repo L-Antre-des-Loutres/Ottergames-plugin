@@ -1,0 +1,5 @@
+name: ottergames
+version: '1.0-SNAPSHOT'
+main: org.antredesloutres.ottergames.Ottergames
+api-version: '1.21'
+load: STARTUP
