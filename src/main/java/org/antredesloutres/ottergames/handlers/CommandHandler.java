@@ -1,5 +1,6 @@
-package org.antredesloutres.ottergames;
+package org.antredesloutres.ottergames.handlers;
 
+import org.antredesloutres.ottergames.GameManager;
 import org.antredesloutres.ottergames.commands.Otter;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,7 +16,8 @@ public class CommandHandler {
 
     public void setup() {
         // Registering
-        Objects.requireNonNull(plugin.getCommand("otter")).setExecutor(new Otter());
+        GameManager gameManager = new GameManager(this.plugin);
+        Objects.requireNonNull(plugin.getCommand("otter")).setExecutor(new Otter(gameManager));
     }
 
 }

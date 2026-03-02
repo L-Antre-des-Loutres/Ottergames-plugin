@@ -1,4 +1,4 @@
-package org.antredesloutres.ottergames;
+package org.antredesloutres.ottergames.handlers;
 
 import org.antredesloutres.ottergames.listeners.JoinListener;
 import org.bukkit.Bukkit;
