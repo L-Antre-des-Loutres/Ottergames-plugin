@@ -3,3 +3,8 @@ version: '1.0-SNAPSHOT'
 main: org.antredesloutres.ottergames.Ottergames
 api-version: '1.21'
 load: STARTUP
+
+commands:
+  otter:
+    description: Une commande super simple pour le plugin Ottergames
+    usage: /otter
