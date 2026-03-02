@@ -6,6 +6,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class ListenersHandler {
+
     private final JavaPlugin plugin;
 
     public ListenersHandler(JavaPlugin plugin) {
@@ -18,4 +19,5 @@ public class ListenersHandler {
         // Registering
         pm.registerEvents(new JoinListener(), plugin);
     }
+
 }

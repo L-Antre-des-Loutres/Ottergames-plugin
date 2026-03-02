@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Objects;
 
 public class CommandHandler {
+
     private final JavaPlugin plugin;
 
     public CommandHandler(JavaPlugin plugin) {
@@ -16,4 +17,5 @@ public class CommandHandler {
         // Registering
         Objects.requireNonNull(plugin.getCommand("otter")).setExecutor(new Otter());
     }
+
 }

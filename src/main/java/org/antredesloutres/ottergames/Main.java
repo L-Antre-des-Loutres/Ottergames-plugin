@@ -17,5 +17,4 @@ public final class Main extends JavaPlugin {
         getLogger().info("Ottergames disabled!");
     }
 
-
 }

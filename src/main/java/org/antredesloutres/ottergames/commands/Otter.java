@@ -6,6 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.jspecify.annotations.NonNull;
 
 public class Otter implements CommandExecutor {
+
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String @NonNull [] args) {
         if (command.getName().equalsIgnoreCase("otter")) {
@@ -14,4 +15,5 @@ public class Otter implements CommandExecutor {
         }
         return false;
     }
+
 }

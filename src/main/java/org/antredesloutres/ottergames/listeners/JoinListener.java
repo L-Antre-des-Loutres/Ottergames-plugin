@@ -10,11 +10,11 @@ public class JoinListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        // Using Paper's Adventure API for modern component-based messages
         event.getPlayer().sendMessage(
                 Component.text("placeholder ")
                         .append(Component.text(event.getPlayer().getName(), NamedTextColor.GOLD))
                         .append(Component.text(" placeholder", NamedTextColor.GRAY))
         );
     }
+
 }
