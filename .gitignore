@@ -38,6 +38,3 @@ versions/
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
-
-# --- Other ---
-.github
