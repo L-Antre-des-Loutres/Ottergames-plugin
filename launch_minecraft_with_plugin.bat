@@ -60,18 +60,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if exist "%~dp0build\libs\ottergames.jar" (
-    set "PLUGIN_SOURCE=%~dp0build\libs\ottergames.jar"
-)
-if not defined PLUGIN_SOURCE (
-    for /f "delims=" %%F in ('dir /b /a:-d /o:-d "%~dp0build\libs\ottergames-*.jar" 2^>nul') do (
-        if not defined PLUGIN_SOURCE set "PLUGIN_SOURCE=%~dp0build\libs\%%F"
-    )
+for /f "delims=" %%F in ('dir /b /a:-d /o:-d "%~dp0build\libs\ottergames*.jar" 2^>nul') do (
+    if not defined PLUGIN_SOURCE set "PLUGIN_SOURCE=%~dp0build\libs\%%F"
 )
 if not defined PLUGIN_SOURCE (
     echo [ERREUR] Impossible de trouver le jar du plugin dans build\libs.
     exit /b 1
 )
+echo [INFO] Jar plugin selectionne: %PLUGIN_SOURCE%
 
 echo [2/4] Installation du plugin dans le serveur...
 copy /Y "%PLUGIN_SOURCE%" "%PLUGIN_TARGET%" >nul
