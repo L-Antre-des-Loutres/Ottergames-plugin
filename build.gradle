@@ -23,7 +23,7 @@ dependencies {
     compileOnly("net.kyori:adventure-text-minimessage:4.17.0")
 }
 
-def targetJavaVersion = 21
+def targetJavaVersion = 25
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
 }
