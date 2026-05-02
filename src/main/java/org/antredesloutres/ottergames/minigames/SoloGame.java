@@ -8,10 +8,10 @@ import org.bukkit.entity.Player;
 import java.util.List;
 
 
-public class PlaceholderGame implements Minigame {
+public class SoloGame implements Minigame {
 
     @Override
-    public String getName() { return "Survie Chronométrée"; }
+    public String getName() { return "Solo arena"; }
 
     @Override
     public int getDurationSeconds() { return 30; }
@@ -20,9 +20,12 @@ public class PlaceholderGame implements Minigame {
     public String getStructureName() { return "house"; }
 
     @Override
+    public int getInstanceCount() { return Math.max(1, Bukkit.getOnlinePlayers().size()); }
+
+    @Override
     public void onStart(List<ArenaInstance> arenas) {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            p.sendMessage("§aTenez bon pendant 30 secondes !");
+            p.sendMessage("§aSolo Challenge ! Une arène par joueur.");
         }
     }
 

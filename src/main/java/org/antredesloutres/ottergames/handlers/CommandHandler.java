@@ -1,27 +1,31 @@
 package org.antredesloutres.ottergames.handlers;
 
 import org.antredesloutres.ottergames.GameManager;
+import org.antredesloutres.ottergames.Main;
+import org.antredesloutres.ottergames.commands.Otterdev;
 import org.antredesloutres.ottergames.commands.Ottergames;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
 
 public class CommandHandler {
 
-    private final JavaPlugin plugin;
+    private final Main plugin;
     private final GameManager gameManager;
 
-    public CommandHandler(JavaPlugin plugin, GameManager gameManager) {
+    public CommandHandler(Main plugin, GameManager gameManager) {
         this.plugin = plugin;
         this.gameManager = gameManager;
     }
 
     public void setup() {
-        // Registering
-        Ottergames otterCommand = new Ottergames(gameManager);
-        var otterPluginCommand = Objects.requireNonNull(plugin.getCommand("ottergames"));
-        otterPluginCommand.setExecutor(otterCommand);
-        otterPluginCommand.setTabCompleter(otterCommand);
-    }
+        Ottergames ottergamesCommand = new Ottergames(gameManager);
+        var ottergamesPluginCommand = Objects.requireNonNull(plugin.getCommand("ottergames"));
+        ottergamesPluginCommand.setExecutor(ottergamesCommand);
+        ottergamesPluginCommand.setTabCompleter(ottergamesCommand);
 
+        Otterdev otterdevCommand = new Otterdev(plugin);
+        var otterdevPluginCommand = Objects.requireNonNull(plugin.getCommand("otterdev"));
+        otterdevPluginCommand.setExecutor(otterdevCommand);
+        otterdevPluginCommand.setTabCompleter(otterdevCommand);
+    }
 }
