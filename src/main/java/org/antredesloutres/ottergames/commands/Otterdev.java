@@ -10,12 +10,10 @@ import org.bukkit.util.StringUtil;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import static org.antredesloutres.ottergames.utils.Constants.COMMAND_USER_MUST_BE_PLAYER;
-import static org.antredesloutres.ottergames.utils.Constants.SPAWNED_STRUCTURE;
+import static org.antredesloutres.ottergames.utils.Constants.*;
 
 public class Otterdev implements TabExecutor {
 
@@ -27,43 +25,38 @@ public class Otterdev implements TabExecutor {
 
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String @NonNull [] args) {
-
         if (!(sender instanceof Player player)) {
             sender.sendMessage(COMMAND_USER_MUST_BE_PLAYER);
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage("§b[OtterDev] §7Sous-commandes : §ftest <nom_structure>");
+            player.sendMessage(OTTERDEV_USAGE);
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("test")) {
-            if (args.length < 2) {
-                player.sendMessage("§cUsage : /otterdev test <nom_structure>");
-                return true;
+        switch (args[0].toLowerCase(Locale.ROOT)) {
+            case "test" -> {
+                if (args.length < 2) {
+                    player.sendMessage(OTTERDEV_TEST_USAGE);
+                    return true;
+                }
+                String structureName = args[1];
+                StructureSpawner.spawn(plugin, structureName, player.getLocation());
+                player.sendMessage(OTTERDEV_STRUCTURE_SPAWNED + structureName);
             }
-
-            String structureName = args[1];
-            StructureSpawner.spawn(plugin, structureName, player.getLocation());
-            player.sendMessage(SPAWNED_STRUCTURE + structureName);
-            return true;
+            default -> player.sendMessage(OTTERDEV_USAGE);
         }
 
-        return false;
+        return true;
     }
 
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull String @NonNull [] args) {
         List<String> completions = new ArrayList<>();
-
-        if (args.length > 1) {
-            return completions;
+        if (args.length == 1) {
+            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of("test"), completions);
         }
-
-        String typed = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
-        StringUtil.copyPartialMatches(typed, List.of("test"), completions);
         return completions;
     }
-
 }

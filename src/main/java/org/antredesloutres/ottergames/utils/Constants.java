@@ -1,14 +1,14 @@
 package org.antredesloutres.ottergames.utils;
 
-import java.util.ArrayList;
-
 public final class Constants {
 
     private Constants() {}
 
     public static final String PLUGIN_NAME = "Ottergames";
-    public static final String SPAWNED_STRUCTURE = "spawned structure :";
-    public static final String COMMAND_USER_MUST_BE_PLAYER = "This command can only be used by a player.";
+
+    //------------------------------------//
+    //              Arena                 //
+    //------------------------------------//
     public static final int ARENA_BASE_X = 10000;
     public static final int ARENA_BASE_Y = 64;
     public static final int ARENA_BASE_Z = 0;
@@ -18,19 +18,32 @@ public final class Constants {
     //            GameManager             //
     //------------------------------------//
     public static final String GAME_MANAGER_ALREADY_RUNNING = "A game is already running.";
-    public static final String GAME_MANAGER_NO_GAME_RUNNING = "No game is currently running.";
-    public static final String GAME_MANAGER_RUNNING = "Game is running";
-    public static final String GAME_MANAGER_NOT_RUNNING = "Game is not currently running.";
-    public static final String GAME_MANAGER_NOT_STARTED = "Game is not currently running.";
-    public static final String GAME_MANAGER_STARTED = "Game is started";
-    public static final String GAME_MANAGER_STOPPED = "Game is stopped";
-    public static final String GAME_MANAGER_STOPPING = "Game is stopping";
+    public static final String GAME_MANAGER_NO_GAME_RUNNING  = "No game is currently running.";
+    public static final String GAME_MANAGER_STARTED          = "Game is started";
+    public static final String GAME_MANAGER_STOPPED          = "Game is stopped";
 
     //------------------------------------//
     //            Participant             //
     //------------------------------------//
-    public static final String PARTICIPANT_NO_UUID = "UUID cannot be null";
+    public static final String PARTICIPANT_NO_UUID     = "UUID cannot be null";
     public static final String PARTICIPANT_NO_USERNAME = "Username cannot be null";
 
-
+    //------------------------------------//
+    //              Commands              //
+    //------------------------------------//
+    public static final String COMMAND_USER_MUST_BE_PLAYER = "§cThis command is for players only.";
+    // Ottergames
+    public static final String OTTERGAMES_USAGE            = "§b[OtterGames] §7Use §f/ottergames start§7, §f/ottergames stop §7or §f/ottergames leave§7.";
+    public static final String OTTERGAMES_ALREADY_RUNNING  = "§cThe game is already running!";
+    public static final String OTTERGAMES_STARTED          = "§a§lStarting the minigame series!";
+    public static final String OTTERGAMES_NOT_RUNNING      = "§eNo game is currently running.";
+    public static final String OTTERGAMES_STOPPED          = "§cGame stopped.";
+    public static final String OTTERGAMES_ALREADY_LEFT     = "§eYou have already opted out of Ottergames.";
+    public static final String OTTERGAMES_LEFT_SPECTATING  = "§eYou have opted out of Ottergames and will spectate until the game ends.";
+    public static final String OTTERGAMES_LEFT             = "§eYou have opted out of Ottergames.";
+    public static final String OTTERGAMES_UNKNOWN_COMMAND  = "§cUnknown command. Use §f/ottergames start§c, §f/ottergames stop §cor §f/ottergames leave§c.";
+    // Otterdev
+    public static final String OTTERDEV_USAGE              = "§b[OtterDev] §7Subcommands: §ftest <structure_name>";
+    public static final String OTTERDEV_TEST_USAGE         = "§cUsage: /otterdev test <structure_name>";
+    public static final String OTTERDEV_STRUCTURE_SPAWNED  = "§a[OtterDev] §7Structure spawned: ";
 }

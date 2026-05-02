@@ -10,9 +10,10 @@ import org.bukkit.util.StringUtil;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import static org.antredesloutres.ottergames.utils.Constants.*;
 
 public class Ottergames implements TabExecutor {
 
@@ -24,72 +25,52 @@ public class Ottergames implements TabExecutor {
 
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String @NonNull [] args) {
-
         if (args.length == 0) {
-            sender.sendMessage("§b[OtterGames] §7Utilisez §f/ottergames start§7, §f/ottergames stop §7ou §f/ottergames leave§7.");
+            sender.sendMessage(OTTERGAMES_USAGE);
             return true;
         }
 
-        String subCommand = args[0].toLowerCase(Locale.ROOT);
-        switch (subCommand) {
+        switch (args[0].toLowerCase(Locale.ROOT)) {
             case "start" -> {
                 if (gameManager.isRunning()) {
-                    sender.sendMessage("§cLa partie est deja en cours !");
+                    sender.sendMessage(OTTERGAMES_ALREADY_RUNNING);
                     return true;
                 }
-
                 gameManager.startGameLoop();
-                sender.sendMessage("§a§lLancement de la serie de mini-jeux !");
-                return true;
+                sender.sendMessage(OTTERGAMES_STARTED);
             }
             case "stop" -> {
                 if (!gameManager.isRunning()) {
-                    sender.sendMessage("§eAucune partie n'est en cours.");
+                    sender.sendMessage(OTTERGAMES_NOT_RUNNING);
                     return true;
                 }
-
                 gameManager.stopEverything();
-                sender.sendMessage("§cPartie interrompue.");
-                return true;
+                sender.sendMessage(OTTERGAMES_STOPPED);
             }
             case "leave" -> {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§cCette commande est reservee aux joueurs.");
+                    sender.sendMessage(COMMAND_USER_MUST_BE_PLAYER);
                     return true;
                 }
-
-                LeaveResult leaveResult = gameManager.handlePlayerLeave(player);
-                if (leaveResult == LeaveResult.ALREADY_LEFT) {
-                    sender.sendMessage("§eTu es deja desinscrit des Ottergames.");
-                    return true;
-                }
-
-                if (leaveResult == LeaveResult.LEFT_AND_SPECTATING) {
-                    sender.sendMessage("§eTu es desinscrit des Ottergames et passe en spectateur jusqu'a la fin de la partie.");
-                    return true;
-                }
-
-                sender.sendMessage("§eTu es desinscrit des Ottergames.");
-                return true;
+                LeaveResult result = gameManager.handlePlayerLeave(player);
+                sender.sendMessage(switch (result) {
+                    case ALREADY_LEFT      -> OTTERGAMES_ALREADY_LEFT;
+                    case LEFT_AND_SPECTATING -> OTTERGAMES_LEFT_SPECTATING;
+                    default                -> OTTERGAMES_LEFT;
+                });
             }
-            default -> {
-                sender.sendMessage("§cCommande inconnue. Utilisez §f/ottergames start§c, §f/ottergames stop §cou §f/ottergames leave§c.");
-                return true;
-            }
+            default -> sender.sendMessage(OTTERGAMES_UNKNOWN_COMMAND);
         }
+
+        return true;
     }
 
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull String @NonNull [] args) {
         List<String> completions = new ArrayList<>();
-
-        if (args.length > 1) {
-            return completions;
+        if (args.length == 1) {
+            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of("start", "stop", "leave"), completions);
         }
-
-        String typed = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
-        StringUtil.copyPartialMatches(typed, Arrays.asList("start", "stop", "leave"), completions);
         return completions;
     }
-
 }
