@@ -1,6 +1,4 @@
-package org.antredesloutres.ottergames.models;
-
-import org.antredesloutres.ottergames.models.interfaces.GameParticipant;
+package org.antredesloutres.ottergames.models.participant;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -12,10 +10,10 @@ import static org.antredesloutres.ottergames.utils.Constants.PARTICIPANT_NO_UUID
  * Represents a game participant.
  * @author matheo-1712
  */
-public record Participant(UUID uuid, String username, boolean spectator) implements GameParticipant {
+public record GamePlayer(UUID uuid, String username, boolean spectator) implements org.antredesloutres.ottergames.models.participant.GameParticipant {
 
     // Validation to prevent null values upon creation
-    public Participant {
+    public GamePlayer {
         Objects.requireNonNull(uuid, PARTICIPANT_NO_UUID);
         Objects.requireNonNull(username, PARTICIPANT_NO_USERNAME);
     }

@@ -3,10 +3,10 @@ package org.antredesloutres.ottergames;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
-import org.antredesloutres.ottergames.minigames.SoloGame;
+import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
-import org.antredesloutres.ottergames.models.Minigame;
-import org.antredesloutres.ottergames.models.Participant;
+import org.antredesloutres.ottergames.models.minigames.Minigame;
+import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.antredesloutres.ottergames.utils.ArenaSlotManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -32,7 +32,7 @@ public class GameManager {
     private static final int BREAK_TIME_SECONDS = 5;
 
     private final List<Minigame> games = new ArrayList<>();
-    private final Map<UUID, Participant> participants = new HashMap<>();
+    private final Map<UUID, GamePlayer> participants = new HashMap<>();
     private final Set<UUID> optedOutPlayers = new HashSet<>();
     private final Set<UUID> disconnectedDuringGamePlayers = new HashSet<>();
     private final Random random = new Random();
@@ -93,8 +93,8 @@ public class GameManager {
         }
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            Participant participant = participants.get(onlinePlayer.getUniqueId());
-            if ((participant != null && participant.isSpectator()) || optedOutPlayers.contains(onlinePlayer.getUniqueId())) {
+            GamePlayer gamePlayer = participants.get(onlinePlayer.getUniqueId());
+            if ((gamePlayer != null && gamePlayer.isSpectator()) || optedOutPlayers.contains(onlinePlayer.getUniqueId())) {
                 onlinePlayer.setGameMode(GameMode.SURVIVAL);
             }
         }
@@ -137,21 +137,21 @@ public class GameManager {
         }
 
         if (disconnectedDuringGamePlayers.contains(playerId) && running) {
-            Participant participant = new Participant(playerId, player.getName(), true);
+            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), true);
             player.setGameMode(GameMode.SPECTATOR);
-            participants.put(playerId, participant);
+            participants.put(playerId, gamePlayer);
             return true;
         }
 
         if (running) {
-            Participant participant = new Participant(playerId, player.getName(), true);
+            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), true);
             player.setGameMode(GameMode.SPECTATOR);
-            participants.put(playerId, participant);
+            participants.put(playerId, gamePlayer);
             return true;
         } else {
-            Participant participant = new Participant(playerId, player.getName(), false);
+            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), false);
             player.setGameMode(GameMode.SURVIVAL);
-            participants.put(playerId, participant);
+            participants.put(playerId, gamePlayer);
             return false;
         }
     }
@@ -165,7 +165,7 @@ public class GameManager {
         optedOutPlayers.add(playerId);
         disconnectedDuringGamePlayers.remove(playerId);
         if (running) {
-            participants.put(playerId, new Participant(playerId, player.getName(), true));
+            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
             player.setGameMode(GameMode.SPECTATOR);
             return LeaveResult.LEFT_AND_SPECTATING;
         }
@@ -176,7 +176,7 @@ public class GameManager {
 
     public void handlePlayerQuit(Player player) {
         UUID playerId = player.getUniqueId();
-        Participant existingParticipant = participants.get(playerId);
+        GamePlayer existingGamePlayer = participants.get(playerId);
         if (optedOutPlayers.contains(playerId)) {
             participants.remove(playerId);
             return;
@@ -188,16 +188,16 @@ public class GameManager {
             return;
         }
 
-        if (existingParticipant == null) {
-            participants.put(playerId, new Participant(playerId, player.getName(), true));
+        if (existingGamePlayer == null) {
+            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
             return;
         }
 
-        if (!existingParticipant.isSpectator()) {
+        if (!existingGamePlayer.isSpectator()) {
             disconnectedDuringGamePlayers.add(playerId);
         }
 
-        participants.put(playerId, new Participant(playerId, existingParticipant.username(), true));
+        participants.put(playerId, new GamePlayer(playerId, existingGamePlayer.username(), true));
     }
 
     private void tick() {
@@ -269,7 +269,7 @@ public class GameManager {
                 continue;
             }
 
-            participants.put(onlinePlayer.getUniqueId(), new Participant(onlinePlayer.getUniqueId(), onlinePlayer.getName(), false));
+            participants.put(onlinePlayer.getUniqueId(), new GamePlayer(onlinePlayer.getUniqueId(), onlinePlayer.getName(), false));
             onlinePlayer.setGameMode(GameMode.SURVIVAL);
         }
     }

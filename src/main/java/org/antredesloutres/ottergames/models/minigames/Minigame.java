@@ -1,4 +1,6 @@
-package org.antredesloutres.ottergames.models;
+package org.antredesloutres.ottergames.models.minigames;
+
+import org.antredesloutres.ottergames.models.ArenaInstance;
 
 import java.util.List;
 

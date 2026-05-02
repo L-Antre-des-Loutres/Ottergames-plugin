@@ -1,4 +1,4 @@
-package org.antredesloutres.ottergames.models.interfaces;
+package org.antredesloutres.ottergames.models.participant;
 import java.util.UUID;
 
 /**

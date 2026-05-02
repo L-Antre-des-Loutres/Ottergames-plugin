@@ -1,7 +1,6 @@
-package org.antredesloutres.ottergames.minigames;
+package org.antredesloutres.ottergames.models.minigames;
 
 import org.antredesloutres.ottergames.models.ArenaInstance;
-import org.antredesloutres.ottergames.models.Minigame;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
