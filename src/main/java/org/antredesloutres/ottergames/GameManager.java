@@ -6,6 +6,7 @@ import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
+import org.antredesloutres.ottergames.models.participant.GameParticipantManager;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.antredesloutres.ottergames.utils.ArenaSlotManager;
 import org.bukkit.Bukkit;
@@ -17,13 +18,9 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 public class GameManager {
@@ -32,9 +29,7 @@ public class GameManager {
     private static final int BREAK_TIME_SECONDS = 5;
 
     private final List<Minigame> games = new ArrayList<>();
-    private final Map<UUID, GamePlayer> participants = new HashMap<>();
-    private final Set<UUID> optedOutPlayers = new HashSet<>();
-    private final Set<UUID> disconnectedDuringGamePlayers = new HashSet<>();
+    private final GameParticipantManager participantManager;
     private final Random random = new Random();
     private final Main plugin;
     private final ArenaSlotManager arenaSlotManager;
@@ -50,6 +45,7 @@ public class GameManager {
     public GameManager(Main plugin) {
         this.plugin = plugin;
         this.arenaSlotManager = new ArenaSlotManager(plugin);
+        this.participantManager = new GameParticipantManager();
         //this.games.add(new PlaceholderGame());
         this.games.add(new SoloGame());
     }
@@ -67,7 +63,7 @@ public class GameManager {
         this.timer = 0;
         this.startCountdownSecondsRemaining = INITIAL_COUNTDOWN_SECONDS;
         this.currentGame = null;
-        registerOnlinePlayersAsParticipants();
+        participantManager.registerOnlinePlayersAsParticipants();
 
         this.loopTask = new BukkitRunnable() {
             @Override
@@ -93,13 +89,13 @@ public class GameManager {
         }
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            GamePlayer gamePlayer = participants.get(onlinePlayer.getUniqueId());
-            if ((gamePlayer != null && gamePlayer.isSpectator()) || optedOutPlayers.contains(onlinePlayer.getUniqueId())) {
+            UUID playerId = onlinePlayer.getUniqueId();
+            if (participantManager.isPlayerSpectator(playerId) || participantManager.isPlayerOptedOut(playerId)) {
                 onlinePlayer.setGameMode(GameMode.SURVIVAL);
             }
         }
 
-        for (UUID playerId : optedOutPlayers) {
+        for (UUID playerId : participantManager.getOptedOutPlayerIds()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 player.sendMessage("§aTu es reinscrit pour la prochaine partie Ottergames.");
@@ -111,10 +107,8 @@ public class GameManager {
         this.timer = 0;
         this.startCountdownSecondsRemaining = 0;
         this.running = false;
-        this.participants.clear();
-        this.optedOutPlayers.clear();
-        this.disconnectedDuringGamePlayers.clear();
-        registerOnlinePlayersAsParticipants();
+        participantManager.clearAll();
+        participantManager.registerOnlinePlayersAsParticipants();
         plugin.getLogger().info("Boucle OtterGames arretee.");
         plugin.getLogger().info("Ottergame game loop stopped.");
     }
@@ -124,80 +118,19 @@ public class GameManager {
     }
 
     public boolean handlePlayerJoin(Player player) {
-        UUID playerId = player.getUniqueId();
-        if (optedOutPlayers.contains(playerId)) {
-            participants.remove(playerId);
-            if (running) {
-                player.setGameMode(GameMode.SPECTATOR);
-                return true;
-            }
-
-            player.setGameMode(GameMode.SURVIVAL);
-            return false;
-        }
-
-        if (disconnectedDuringGamePlayers.contains(playerId) && running) {
-            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), true);
-            player.setGameMode(GameMode.SPECTATOR);
-            participants.put(playerId, gamePlayer);
-            return true;
-        }
-
-        if (running) {
-            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), true);
-            player.setGameMode(GameMode.SPECTATOR);
-            participants.put(playerId, gamePlayer);
-            return true;
-        } else {
-            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), false);
-            player.setGameMode(GameMode.SURVIVAL);
-            participants.put(playerId, gamePlayer);
-            return false;
-        }
+        return participantManager.handlePlayerJoin(player, running);
     }
 
     public LeaveResult handlePlayerLeave(Player player) {
-        UUID playerId = player.getUniqueId();
-        if (optedOutPlayers.contains(playerId)) {
-            return LeaveResult.ALREADY_LEFT;
-        }
-
-        optedOutPlayers.add(playerId);
-        disconnectedDuringGamePlayers.remove(playerId);
-        if (running) {
-            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            player.setGameMode(GameMode.SPECTATOR);
-            return LeaveResult.LEFT_AND_SPECTATING;
-        }
-
-        participants.remove(playerId);
-        return LeaveResult.LEFT;
+        return switch (participantManager.handlePlayerLeave(player, running)) {
+            case ALREADY_LEFT -> LeaveResult.ALREADY_LEFT;
+            case LEFT_AND_SPECTATING -> LeaveResult.LEFT_AND_SPECTATING;
+            case LEFT -> LeaveResult.LEFT;
+        };
     }
 
     public void handlePlayerQuit(Player player) {
-        UUID playerId = player.getUniqueId();
-        GamePlayer existingGamePlayer = participants.get(playerId);
-        if (optedOutPlayers.contains(playerId)) {
-            participants.remove(playerId);
-            return;
-        }
-
-        if (!running) {
-            participants.remove(playerId);
-            disconnectedDuringGamePlayers.remove(playerId);
-            return;
-        }
-
-        if (existingGamePlayer == null) {
-            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            return;
-        }
-
-        if (!existingGamePlayer.isSpectator()) {
-            disconnectedDuringGamePlayers.add(playerId);
-        }
-
-        participants.put(playerId, new GamePlayer(playerId, existingGamePlayer.username(), true));
+        participantManager.handlePlayerQuit(player, running);
     }
 
     private void tick() {
@@ -237,7 +170,7 @@ public class GameManager {
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
 
-        disconnectedDuringGamePlayers.clear();
+        participantManager.clearDisconnectedDuringGamePlayers();
 
         plugin.getLogger().info("Minigame ended: " + gameName + ".");
         isPaused = true;
@@ -262,24 +195,28 @@ public class GameManager {
         });
     }
 
-    private void registerOnlinePlayersAsParticipants() {
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            if (optedOutPlayers.contains(onlinePlayer.getUniqueId())) {
-                onlinePlayer.setGameMode(GameMode.SPECTATOR);
-                continue;
-            }
-
-            participants.put(onlinePlayer.getUniqueId(), new GamePlayer(onlinePlayer.getUniqueId(), onlinePlayer.getName(), false));
-            onlinePlayer.setGameMode(GameMode.SURVIVAL);
-        }
-    }
-
     public boolean isPlayerOptedOut(UUID playerId) {
-        return optedOutPlayers.contains(playerId);
+        return participantManager.isPlayerOptedOut(playerId);
     }
 
     public boolean isPlayerDisconnectedDuringGame(UUID playerId) {
-        return disconnectedDuringGamePlayers.contains(playerId);
+        return participantManager.isPlayerDisconnectedDuringGame(playerId);
+    }
+
+    public List<GamePlayer> getParticipants() {
+        return participantManager.getParticipants();
+    }
+
+    public List<GamePlayer> getActiveParticipants() {
+        return participantManager.getActiveParticipants();
+    }
+
+    public List<List<GamePlayer>> createParticipantGroups(int groupSize) {
+        return participantManager.createActiveGroups(groupSize);
+    }
+
+    public List<List<GamePlayer>> createParticipantGroups(int groupSize, boolean shuffle) {
+        return participantManager.createActiveGroups(groupSize, shuffle);
     }
 
     public enum LeaveResult {
