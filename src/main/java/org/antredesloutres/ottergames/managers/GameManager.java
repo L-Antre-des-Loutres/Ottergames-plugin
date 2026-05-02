@@ -12,6 +12,7 @@ import org.antredesloutres.ottergames.models.minigames.Minigame;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,7 +21,9 @@ import org.bukkit.scheduler.BukkitTask;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -37,6 +40,8 @@ public class GameManager {
 
     private Minigame currentGame;
     private List<ArenaInstance> currentArenas = Collections.emptyList();
+    private final Map<UUID, Location> playerSpawnLocations = new HashMap<>();
+    private final Map<UUID, ArenaInstance> playerArenaAssignments = new HashMap<>();
     private int timer;
     private int startCountdownSecondsRemaining;
     private int currentRound;
@@ -100,6 +105,11 @@ public class GameManager {
             currentArenas = Collections.emptyList();
             plugin.getLogger().info("Minigame stopped: " + currentGame.getName() + ".");
         }
+
+        clearAllParticipantsInventories();
+
+        playerSpawnLocations.clear();
+        playerArenaAssignments.clear();
 
         if (this.loopTask != null) {
             this.loopTask.cancel();
@@ -199,8 +209,11 @@ public class GameManager {
         currentGame.onEnd();
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
+        playerSpawnLocations.clear();
+        playerArenaAssignments.clear();
 
         participantManager.clearDisconnectedDuringGamePlayers();
+        clearAllParticipantsInventories();
 
         plugin.getLogger().info("Minigame ended: " + gameName + ".");
         isPaused = true;
@@ -266,7 +279,12 @@ public class GameManager {
                     plugin.getLogger().warning("Cannot teleport " + player.getName() + ": spawn world is null.");
                     continue;
                 }
+                playerSpawnLocations.put(player.getUniqueId(), spawnLocation.clone());
+                playerArenaAssignments.put(player.getUniqueId(), arena);
                 player.teleport(spawnLocation);
+                
+                clearPlayerInventory(player);
+                currentGame.applyStartingInventory(player);
             }
         }
     }
@@ -297,6 +315,38 @@ public class GameManager {
 
     public int getCurrentRound() {
         return currentRound;
+    }
+
+    public Minigame getCurrentGame() {
+        return currentGame;
+    }
+
+    public Location getPlayerSpawnLocation(UUID playerId) {
+        return playerSpawnLocations.get(playerId);
+    }
+
+    public ArenaInstance getPlayerArena(UUID playerId) {
+        return playerArenaAssignments.get(playerId);
+    }
+
+    public boolean eliminatePlayer(UUID playerId) {
+        return participantManager.eliminatePlayer(playerId);
+    }
+
+    private void clearAllParticipantsInventories() {
+        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                clearPlayerInventory(player);
+            }
+        }
+    }
+
+    private void clearPlayerInventory(Player player) {
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.getInventory().setItemInOffHand(null);
+        player.updateInventory();
     }
 
     public enum LeaveResult {

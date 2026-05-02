@@ -9,7 +9,9 @@ import org.antredesloutres.ottergames.models.structures.ArenaSpawnZone;
 import org.antredesloutres.ottergames.models.structures.MinigameStructure;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Map;
@@ -60,7 +62,7 @@ public class Hikabrain implements Minigame {
 
     @Override
     public List<SelectionCondition> getSelectionConditions() {
-        return List.of(SelectionConditions.minActiveParticipants(2));
+        return List.of(SelectionConditions.minActiveParticipants(1));
     }
 
     @Override
@@ -86,5 +88,54 @@ public class Hikabrain implements Minigame {
     @Override
     public void onEnd() {
         Bukkit.broadcastMessage("§dHikabrain §7(base): manche terminée.");
+    }
+
+    @Override
+    public boolean keepPlayersInBounds() {
+        return true;
+    }
+
+    @Override
+    public boolean instantRespawn() {
+        return true;
+    }
+
+    @Override
+    public boolean eliminateOnDeath() {
+        return false;
+    }
+
+    @Override
+    public boolean disableFallDamage() {
+        return true;
+    }
+
+    @Override
+    public boolean restoreInventoryOnDeath() {
+        return true;
+    }
+
+    @Override
+    public boolean restoreInventoryOnBoundsExit() {
+        return true;
+    }
+
+    @Override
+    public void applyStartingInventory(Player player) {
+        // Hikabrain gear
+        player.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
+        player.getInventory().setItem(1, new ItemStack(Material.STONE_PICKAXE));
+        player.getInventory().setItem(2, new ItemStack(Material.SANDSTONE, 64));
+        player.getInventory().setItem(3, new ItemStack(Material.GOLDEN_APPLE, 8));
+
+        // Offhand
+        player.getInventory().setItemInOffHand(new ItemStack(Material.SANDSTONE, 64));
+
+        // Basic armor
+        player.getInventory().setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
+        player.getInventory().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
+        player.getInventory().setBoots(new ItemStack(Material.IRON_BOOTS));
+
+        player.updateInventory();
     }
 }

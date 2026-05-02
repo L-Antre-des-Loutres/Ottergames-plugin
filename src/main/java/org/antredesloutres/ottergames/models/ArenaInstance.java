@@ -38,4 +38,24 @@ public record ArenaInstance(Location origin, BlockVector size) {
                     world.getBlockAt(ox + x, oy + y, oz + z).setType(Material.AIR, false);
     }
 
+    /**
+     * Checks whether a world location is inside this arena's bounding box.
+     */
+    public boolean contains(Location loc) {
+        if (loc.getWorld() == null || origin.getWorld() == null) return false;
+        if (!loc.getWorld().equals(origin.getWorld())) return false;
+
+        double x = loc.getX();
+        double y = loc.getY();
+        double z = loc.getZ();
+
+        double ox = origin.getX();
+        double oy = origin.getY();
+        double oz = origin.getZ();
+
+        return x >= ox && x <= ox + size.getBlockX()
+            && y >= oy && y <= oy + size.getBlockY()
+            && z >= oz && z <= oz + size.getBlockZ();
+    }
+
 }
