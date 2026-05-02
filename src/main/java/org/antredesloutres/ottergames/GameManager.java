@@ -3,7 +3,6 @@ package org.antredesloutres.ottergames;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
-import org.antredesloutres.ottergames.minigames.PlaceholderGame;
 import org.antredesloutres.ottergames.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.antredesloutres.ottergames.models.Minigame;
@@ -13,7 +12,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -89,8 +87,10 @@ public class GameManager {
             plugin.getLogger().info("Minigame stopped: " + currentGame.getName() + ".");
         }
 
-        Bukkit.getScheduler().cancelTasks(plugin);
-        this.loopTask = null;
+        if (this.loopTask != null) {
+            this.loopTask.cancel();
+            this.loopTask = null;
+        }
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             Participant participant = participants.get(onlinePlayer.getUniqueId());
@@ -236,6 +236,9 @@ public class GameManager {
         currentGame.onEnd();
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
+
+        disconnectedDuringGamePlayers.clear();
+
         plugin.getLogger().info("Minigame ended: " + gameName + ".");
         isPaused = true;
         timer = BREAK_TIME_SECONDS;
@@ -243,9 +246,13 @@ public class GameManager {
     }
 
     private void showStartCountdown(int secondsRemaining) {
+        String subtitleMessage = (currentGame != null)
+                ? "Starting " + currentGame.getName() + " in..."
+                : "OtterGames starts in...";
+
         var title = Title.title(
                 Component.text(String.valueOf(secondsRemaining), NamedTextColor.GOLD),
-                Component.text("Starting " + currentGame.getName() + " in...", NamedTextColor.YELLOW),
+                Component.text(subtitleMessage, NamedTextColor.YELLOW),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ZERO)
         );
 
