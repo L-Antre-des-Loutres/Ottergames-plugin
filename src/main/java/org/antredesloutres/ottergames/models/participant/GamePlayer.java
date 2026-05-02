@@ -8,7 +8,6 @@ import static org.antredesloutres.ottergames.utils.Constants.PARTICIPANT_NO_UUID
 
 /**
  * Represents a game participant.
- * @author matheo-1712
  */
 public record GamePlayer(UUID uuid, String username, boolean spectator) implements org.antredesloutres.ottergames.models.participant.GameParticipant {
 

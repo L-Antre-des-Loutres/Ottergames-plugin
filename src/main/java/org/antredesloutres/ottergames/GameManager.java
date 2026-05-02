@@ -6,10 +6,11 @@ import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
+import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
+import org.antredesloutres.ottergames.utils.GameParticipantManager;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.antredesloutres.ottergames.utils.ArenaSlotManager;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -17,13 +18,9 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 public class GameManager {
@@ -32,9 +29,7 @@ public class GameManager {
     private static final int BREAK_TIME_SECONDS = 5;
 
     private final List<Minigame> games = new ArrayList<>();
-    private final Map<UUID, GamePlayer> participants = new HashMap<>();
-    private final Set<UUID> optedOutPlayers = new HashSet<>();
-    private final Set<UUID> disconnectedDuringGamePlayers = new HashSet<>();
+    private final GameParticipantManager participantManager;
     private final Random random = new Random();
     private final Main plugin;
     private final ArenaSlotManager arenaSlotManager;
@@ -43,6 +38,7 @@ public class GameManager {
     private List<ArenaInstance> currentArenas = Collections.emptyList();
     private int timer;
     private int startCountdownSecondsRemaining;
+    private int currentRound;
     private boolean isPaused = true;
     private boolean running = false;
     private BukkitTask loopTask;
@@ -50,24 +46,37 @@ public class GameManager {
     public GameManager(Main plugin) {
         this.plugin = plugin;
         this.arenaSlotManager = new ArenaSlotManager(plugin);
+        this.participantManager = new GameParticipantManager();
         //this.games.add(new PlaceholderGame());
         this.games.add(new SoloGame());
     }
 
-    public void startGameLoop() {
-        if (running) return;
+    public boolean startGameLoop() {
+        if (running) return false;
 
         if (loopTask != null) {
             loopTask.cancel();
             loopTask = null;
         }
 
+        participantManager.registerOnlinePlayersAsParticipants();
+        GameSelectionContext initialSelectionContext = buildSelectionContext(1);
+        if (getSelectableGames(initialSelectionContext).isEmpty()) {
+            plugin.getLogger().warning(
+                    "Cannot start game loop: no minigame available for round " + initialSelectionContext.roundNumber()
+                            + " (activeParticipants=" + initialSelectionContext.activeParticipantCount()
+                            + ", spectators=" + initialSelectionContext.spectatorCount()
+                            + ", total=" + initialSelectionContext.totalParticipantCount() + ")."
+            );
+            return false;
+        }
+
         this.running = true;
         this.isPaused = true;
         this.timer = 0;
         this.startCountdownSecondsRemaining = INITIAL_COUNTDOWN_SECONDS;
+        this.currentRound = 0;
         this.currentGame = null;
-        registerOnlinePlayersAsParticipants();
 
         this.loopTask = new BukkitRunnable() {
             @Override
@@ -77,6 +86,7 @@ public class GameManager {
         }.runTaskTimer(plugin, 0L, 20L);
 
         plugin.getLogger().info("Ottergame game loop started.");
+        return true;
     }
 
     public void stopEverything() {
@@ -92,14 +102,7 @@ public class GameManager {
             this.loopTask = null;
         }
 
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            GamePlayer gamePlayer = participants.get(onlinePlayer.getUniqueId());
-            if ((gamePlayer != null && gamePlayer.isSpectator()) || optedOutPlayers.contains(onlinePlayer.getUniqueId())) {
-                onlinePlayer.setGameMode(GameMode.SURVIVAL);
-            }
-        }
-
-        for (UUID playerId : optedOutPlayers) {
+        for (UUID playerId : participantManager.getOptedOutPlayerIds()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 player.sendMessage("§aTu es reinscrit pour la prochaine partie Ottergames.");
@@ -110,11 +113,10 @@ public class GameManager {
         this.isPaused = true;
         this.timer = 0;
         this.startCountdownSecondsRemaining = 0;
+        this.currentRound = 0;
         this.running = false;
-        this.participants.clear();
-        this.optedOutPlayers.clear();
-        this.disconnectedDuringGamePlayers.clear();
-        registerOnlinePlayersAsParticipants();
+        participantManager.clearAll();
+        participantManager.registerOnlinePlayersAsParticipants();
         plugin.getLogger().info("Boucle OtterGames arretee.");
         plugin.getLogger().info("Ottergame game loop stopped.");
     }
@@ -124,80 +126,19 @@ public class GameManager {
     }
 
     public boolean handlePlayerJoin(Player player) {
-        UUID playerId = player.getUniqueId();
-        if (optedOutPlayers.contains(playerId)) {
-            participants.remove(playerId);
-            if (running) {
-                player.setGameMode(GameMode.SPECTATOR);
-                return true;
-            }
-
-            player.setGameMode(GameMode.SURVIVAL);
-            return false;
-        }
-
-        if (disconnectedDuringGamePlayers.contains(playerId) && running) {
-            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), true);
-            player.setGameMode(GameMode.SPECTATOR);
-            participants.put(playerId, gamePlayer);
-            return true;
-        }
-
-        if (running) {
-            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), true);
-            player.setGameMode(GameMode.SPECTATOR);
-            participants.put(playerId, gamePlayer);
-            return true;
-        } else {
-            GamePlayer gamePlayer = new GamePlayer(playerId, player.getName(), false);
-            player.setGameMode(GameMode.SURVIVAL);
-            participants.put(playerId, gamePlayer);
-            return false;
-        }
+        return participantManager.handlePlayerJoin(player, running);
     }
 
     public LeaveResult handlePlayerLeave(Player player) {
-        UUID playerId = player.getUniqueId();
-        if (optedOutPlayers.contains(playerId)) {
-            return LeaveResult.ALREADY_LEFT;
-        }
-
-        optedOutPlayers.add(playerId);
-        disconnectedDuringGamePlayers.remove(playerId);
-        if (running) {
-            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            player.setGameMode(GameMode.SPECTATOR);
-            return LeaveResult.LEFT_AND_SPECTATING;
-        }
-
-        participants.remove(playerId);
-        return LeaveResult.LEFT;
+        return switch (participantManager.handlePlayerLeave(player, running)) {
+            case ALREADY_LEFT -> LeaveResult.ALREADY_LEFT;
+            case LEFT_AND_SPECTATING -> LeaveResult.LEFT_AND_SPECTATING;
+            case LEFT -> LeaveResult.LEFT;
+        };
     }
 
     public void handlePlayerQuit(Player player) {
-        UUID playerId = player.getUniqueId();
-        GamePlayer existingGamePlayer = participants.get(playerId);
-        if (optedOutPlayers.contains(playerId)) {
-            participants.remove(playerId);
-            return;
-        }
-
-        if (!running) {
-            participants.remove(playerId);
-            disconnectedDuringGamePlayers.remove(playerId);
-            return;
-        }
-
-        if (existingGamePlayer == null) {
-            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            return;
-        }
-
-        if (!existingGamePlayer.isSpectator()) {
-            disconnectedDuringGamePlayers.add(playerId);
-        }
-
-        participants.put(playerId, new GamePlayer(playerId, existingGamePlayer.username(), true));
+        participantManager.handlePlayerQuit(player, running);
     }
 
     private void tick() {
@@ -215,15 +156,32 @@ public class GameManager {
         }
 
         if (isPaused) {
-            startNextGame();
+            startNextMinigame();
         } else {
-            stopCurrentGame();
+            stopCurrentMinigame();
         }
     }
 
-    private void startNextGame() {
-        currentGame = games.get(random.nextInt(games.size()));
-        currentArenas = arenaSlotManager.allocate(currentGame.getStructureName(), currentGame.getInstanceCount());
+    private void startNextMinigame() {
+        GameSelectionContext selectionContext = buildSelectionContext(currentRound + 1);
+
+        List<Minigame> selectableGames = getSelectableGames(selectionContext);
+        if (selectableGames.isEmpty()) {
+            currentGame = null;
+            Bukkit.broadcastMessage("§cAucun mini-jeu compatible avec la situation actuelle. Partie arrêtée.");
+            plugin.getLogger().warning(
+                    "No minigame available for round " + selectionContext.roundNumber()
+                            + " (activeParticipants=" + selectionContext.activeParticipantCount()
+                            + ", spectators=" + selectionContext.spectatorCount()
+                            + ", total=" + selectionContext.totalParticipantCount() + "). Stopping game loop."
+            );
+            stopEverything();
+            return;
+        }
+
+        currentGame = selectableGames.get(random.nextInt(selectableGames.size()));
+        currentArenas = arenaSlotManager.allocate(currentGame.getStructureName(), currentGame.getInstanceCount(selectionContext));
+        currentRound = selectionContext.roundNumber();
         isPaused = false;
         timer = currentGame.getDurationSeconds();
 
@@ -231,13 +189,13 @@ public class GameManager {
         plugin.getLogger().info("Minigame started: " + currentGame.getName() + " (" + timer + "s).");
     }
 
-    private void stopCurrentGame() {
+    private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
         currentGame.onEnd();
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
 
-        disconnectedDuringGamePlayers.clear();
+        participantManager.clearDisconnectedDuringGamePlayers();
 
         plugin.getLogger().info("Minigame ended: " + gameName + ".");
         isPaused = true;
@@ -262,24 +220,49 @@ public class GameManager {
         });
     }
 
-    private void registerOnlinePlayersAsParticipants() {
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            if (optedOutPlayers.contains(onlinePlayer.getUniqueId())) {
-                onlinePlayer.setGameMode(GameMode.SPECTATOR);
-                continue;
+    private List<Minigame> getSelectableGames(GameSelectionContext selectionContext) {
+        List<Minigame> selectableGames = new ArrayList<>();
+        for (Minigame game : games) {
+            if (game.canBeSelected(selectionContext)) {
+                selectableGames.add(game);
             }
-
-            participants.put(onlinePlayer.getUniqueId(), new GamePlayer(onlinePlayer.getUniqueId(), onlinePlayer.getName(), false));
-            onlinePlayer.setGameMode(GameMode.SURVIVAL);
         }
+        return selectableGames;
+    }
+
+    private GameSelectionContext buildSelectionContext(int roundNumber) {
+        int activeParticipantCount = participantManager.getActiveParticipantCount();
+        int spectatorCount = participantManager.getSpectatorParticipantCount();
+        int totalParticipantCount = activeParticipantCount + spectatorCount;
+        return new GameSelectionContext(roundNumber, activeParticipantCount, spectatorCount, totalParticipantCount);
     }
 
     public boolean isPlayerOptedOut(UUID playerId) {
-        return optedOutPlayers.contains(playerId);
+        return participantManager.isPlayerOptedOut(playerId);
     }
 
     public boolean isPlayerDisconnectedDuringGame(UUID playerId) {
-        return disconnectedDuringGamePlayers.contains(playerId);
+        return participantManager.isPlayerDisconnectedDuringGame(playerId);
+    }
+
+    public List<GamePlayer> getParticipants() {
+        return participantManager.getParticipants();
+    }
+
+    public List<GamePlayer> getActiveParticipants() {
+        return participantManager.getActiveParticipants();
+    }
+
+    public List<List<GamePlayer>> createParticipantGroups(int groupSize) {
+        return participantManager.createActiveGroups(groupSize);
+    }
+
+    public List<List<GamePlayer>> createParticipantGroups(int groupSize, boolean shuffle) {
+        return participantManager.createActiveGroups(groupSize, shuffle);
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
     }
 
     public enum LeaveResult {

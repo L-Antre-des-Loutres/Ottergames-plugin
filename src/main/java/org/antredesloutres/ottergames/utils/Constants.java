@@ -39,6 +39,7 @@ public final class Constants {
     public static final String OTTERGAMES_USAGE            = "§b[OtterGames] §7Use §f/ottergames start§7, §f/ottergames stop §7or §f/ottergames leave§7.";
     public static final String OTTERGAMES_ALREADY_RUNNING  = "§cThe game is already running!";
     public static final String OTTERGAMES_STARTED          = "§a§lStarting the minigame series!";
+    public static final String OTTERGAMES_START_BLOCKED    = "§cImpossible de démarrer: aucun mini-jeu compatible avec les conditions actuelles.";
     public static final String OTTERGAMES_NOT_RUNNING      = "§eNo game is currently running.";
     public static final String OTTERGAMES_STOPPED          = "§cGame stopped.";
     public static final String OTTERGAMES_ALREADY_LEFT     = "§eYou have already opted out of Ottergames.";
