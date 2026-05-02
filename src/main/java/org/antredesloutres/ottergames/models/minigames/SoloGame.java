@@ -26,8 +26,7 @@ public class SoloGame implements Minigame {
 
     @Override
     public List<SelectionCondition> getSelectionConditions() {
-        return List.of(SelectionConditions.activeParticipantCountIsOdd(),
-                SelectionConditions.minSpectators(2));
+        return List.of(SelectionConditions.activeParticipantCountIsOdd());
 
     }
 

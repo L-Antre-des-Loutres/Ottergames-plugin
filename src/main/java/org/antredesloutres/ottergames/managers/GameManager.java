@@ -4,6 +4,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.Main;
+import org.antredesloutres.ottergames.models.minigames.Hikabrain;
+import org.antredesloutres.ottergames.models.minigames.PlaceholderGame;
 import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
@@ -46,8 +48,11 @@ public class GameManager {
         this.plugin = plugin;
         this.arenaSlotManager = new ArenaSlotManager(plugin);
         this.participantManager = new GameParticipantManager();
-        //this.games.add(new PlaceholderGame());
-        this.games.add(new SoloGame());
+
+        // Add games
+//        this.games.add(new PlaceholderGame());
+//        this.games.add(new SoloGame());
+        this.games.add(new Hikabrain(plugin));
     }
 
     public boolean startGameLoop() {
@@ -184,6 +189,7 @@ public class GameManager {
         isPaused = false;
         timer = currentGame.getDurationSeconds();
 
+        teleportActiveParticipantsToArenas();
         currentGame.onStart(currentArenas);
         plugin.getLogger().info("Minigame started: " + currentGame.getName() + " (" + timer + "s).");
     }
@@ -234,6 +240,46 @@ public class GameManager {
         int spectatorCount = participantManager.getSpectatorParticipantCount();
         int totalParticipantCount = activeParticipantCount + spectatorCount;
         return new GameSelectionContext(roundNumber, activeParticipantCount, spectatorCount, totalParticipantCount);
+    }
+
+    private void teleportActiveParticipantsToArenas() {
+        if (currentGame == null || currentArenas.isEmpty()) {
+            return;
+        }
+
+        List<GamePlayer> activeParticipants = participantManager.getActiveParticipants();
+        if (activeParticipants.isEmpty()) {
+            return;
+        }
+
+        List<List<GamePlayer>> playersByArena = new ArrayList<>();
+        for (int i = 0; i < currentArenas.size(); i++) {
+            playersByArena.add(new ArrayList<>());
+        }
+
+        for (int i = 0; i < activeParticipants.size(); i++) {
+            int arenaIndex = i % currentArenas.size();
+            playersByArena.get(arenaIndex).add(activeParticipants.get(i));
+        }
+
+        for (int arenaIndex = 0; arenaIndex < playersByArena.size(); arenaIndex++) {
+            ArenaInstance arena = currentArenas.get(arenaIndex);
+            List<GamePlayer> playersInArena = playersByArena.get(arenaIndex);
+            for (int playerIndex = 0; playerIndex < playersInArena.size(); playerIndex++) {
+                GamePlayer gamePlayer = playersInArena.get(playerIndex);
+                Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+                if (player == null || !player.isOnline()) {
+                    continue;
+                }
+
+                var spawnLocation = currentGame.getSpawnLocation(arena, random, playerIndex, playersInArena.size());
+                if (spawnLocation.getWorld() == null) {
+                    plugin.getLogger().warning("Cannot teleport " + player.getName() + ": spawn world is null.");
+                    continue;
+                }
+                player.teleport(spawnLocation);
+            }
+        }
     }
 
     public boolean isPlayerOptedOut(UUID playerId) {
