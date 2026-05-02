@@ -2,6 +2,7 @@ package org.antredesloutres.ottergames;
 
 import org.antredesloutres.ottergames.handlers.CommandHandler;
 import org.antredesloutres.ottergames.handlers.ListenersHandler;
+import org.antredesloutres.ottergames.managers.GameManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin {

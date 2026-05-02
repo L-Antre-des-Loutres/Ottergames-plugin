@@ -1,15 +1,14 @@
-package org.antredesloutres.ottergames;
+package org.antredesloutres.ottergames.managers;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
+import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
-import org.antredesloutres.ottergames.utils.GameParticipantManager;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
-import org.antredesloutres.ottergames.utils.ArenaSlotManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;

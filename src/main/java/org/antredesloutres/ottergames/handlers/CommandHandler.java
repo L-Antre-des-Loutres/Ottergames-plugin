@@ -1,6 +1,6 @@
 package org.antredesloutres.ottergames.handlers;
 
-import org.antredesloutres.ottergames.GameManager;
+import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.commands.Otterdev;
 import org.antredesloutres.ottergames.commands.Ottergames;

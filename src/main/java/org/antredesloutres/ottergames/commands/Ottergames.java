@@ -1,7 +1,7 @@
 package org.antredesloutres.ottergames.commands;
 
-import org.antredesloutres.ottergames.GameManager;
-import org.antredesloutres.ottergames.GameManager.LeaveResult;
+import org.antredesloutres.ottergames.managers.GameManager;
+import org.antredesloutres.ottergames.managers.GameManager.LeaveResult;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;

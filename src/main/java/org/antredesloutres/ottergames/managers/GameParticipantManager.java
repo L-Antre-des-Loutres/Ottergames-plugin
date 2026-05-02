@@ -1,4 +1,4 @@
-package org.antredesloutres.ottergames.utils;
+package org.antredesloutres.ottergames.managers;
 
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.bukkit.Bukkit;
@@ -25,11 +25,7 @@ public class GameParticipantManager {
         UUID playerId = player.getUniqueId();
         if (optedOutPlayers.contains(playerId)) {
             participants.remove(playerId);
-            if (gameRunning) {
-                return true;
-            }
-
-            return false;
+            return gameRunning;
         }
 
         if (disconnectedDuringGamePlayers.contains(playerId) && gameRunning) {

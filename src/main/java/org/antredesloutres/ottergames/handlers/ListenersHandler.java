@@ -1,6 +1,6 @@
 package org.antredesloutres.ottergames.handlers;
 
-import org.antredesloutres.ottergames.GameManager;
+import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.listeners.JoinListener;
 import org.antredesloutres.ottergames.listeners.QuitListener;
 import org.bukkit.Bukkit;

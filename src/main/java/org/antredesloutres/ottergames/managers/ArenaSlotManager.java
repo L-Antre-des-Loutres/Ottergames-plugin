@@ -1,7 +1,8 @@
-package org.antredesloutres.ottergames.utils;
+package org.antredesloutres.ottergames.managers;
 
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.models.ArenaInstance;
+import org.antredesloutres.ottergames.utils.StructureSpawner;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;

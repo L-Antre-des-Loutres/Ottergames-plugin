@@ -1,7 +1,7 @@
 package org.antredesloutres.ottergames.listeners;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.antredesloutres.ottergames.GameManager;
+import org.antredesloutres.ottergames.managers.GameManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
