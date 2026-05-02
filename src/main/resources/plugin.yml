@@ -8,3 +8,7 @@ commands:
   ottergames:
     description: Une commande super simple pour le plugin Ottergames
     usage: /ottergames <start|stop>
+  otterdev:
+    description: Commandes de développement et de test
+    usage: /otterdev <sous-commande>
+
