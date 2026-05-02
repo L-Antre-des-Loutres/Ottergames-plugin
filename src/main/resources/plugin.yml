@@ -7,7 +7,7 @@ load: STARTUP
 commands:
   ottergames:
     description: Une commande super simple pour le plugin Ottergames
-    usage: /ottergames <start|stop>
+    usage: /ottergames <start|stop|leave>
   otterdev:
     description: Commandes de développement et de test
     usage: /otterdev <sous-commande>

@@ -26,6 +26,11 @@ public final class Constants {
     public static final String GAME_MANAGER_STOPPED = "Game is stopped";
     public static final String GAME_MANAGER_STOPPING = "Game is stopping";
 
+    //------------------------------------//
+    //            Participant             //
+    //------------------------------------//
+    public static final String PARTICIPANT_NO_UUID = "UUID cannot be null";
+    public static final String PARTICIPANT_NO_USERNAME = "Username cannot be null";
 
 
 }
