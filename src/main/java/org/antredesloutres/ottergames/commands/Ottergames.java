@@ -19,10 +19,22 @@ public class Ottergames implements TabExecutor {
 
     private final GameManager gameManager;
 
+    /**
+     * Constructor for the Ottergames command handler.
+     * @param gameManager The GameManager instance used to manage game state and player participation.
+     */
     public Ottergames(GameManager gameManager) {
         this.gameManager = gameManager;
     }
 
+    /**
+     * Handles the execution of the /ottergames command and its subcommands.
+     * @param sender Source of the command
+     * @param command Command which was executed
+     * @param label Alias of the command which was used
+     * @param args Passed command arguments
+     * @return true if the command was handled successfully, false otherwise
+     */
     @Override
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String @NonNull [] args) {
         if (args.length == 0) {
@@ -65,6 +77,14 @@ public class Ottergames implements TabExecutor {
         return true;
     }
 
+    /**
+     * Provides tab completion for the /ottergames command and its subcommands.
+     * @param sender Source of the command (For tab-completing inside a command block, this will be the player not the command block).
+     * @param command Command which was executed
+     * @param alias Alias of the command which was used
+     * @param args The arguments passed to the command, including final partial argument to be completed
+     * @return A list of possible completions for the final argument, or an empty list if there are no completions
+     */
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull String @NonNull [] args) {
         List<String> completions = new ArrayList<>();
