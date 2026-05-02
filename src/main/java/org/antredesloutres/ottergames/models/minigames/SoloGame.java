@@ -16,7 +16,7 @@ public class SoloGame implements Minigame {
     public int getDurationSeconds() { return 30; }
 
     @Override
-    public String getStructureName() { return "house"; }
+    public String getStructureName() { return "pvp_arena"; }
 
     @Override
     public int getInstanceCount() { return Math.max(1, Bukkit.getOnlinePlayers().size()); }
