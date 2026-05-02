@@ -48,7 +48,10 @@ public class Ottergames implements TabExecutor {
                     sender.sendMessage(OTTERGAMES_ALREADY_RUNNING);
                     return true;
                 }
-                gameManager.startGameLoop();
+                if (!gameManager.startGameLoop()) {
+                    sender.sendMessage(OTTERGAMES_START_BLOCKED);
+                    return true;
+                }
                 sender.sendMessage(OTTERGAMES_STARTED);
             }
             case OTTERGAMES_ARGS_STOP -> {

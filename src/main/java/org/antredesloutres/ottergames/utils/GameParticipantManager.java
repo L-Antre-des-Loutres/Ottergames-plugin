@@ -1,7 +1,7 @@
-package org.antredesloutres.ottergames.models.participant;
+package org.antredesloutres.ottergames.utils;
 
+import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -26,28 +26,23 @@ public class GameParticipantManager {
         if (optedOutPlayers.contains(playerId)) {
             participants.remove(playerId);
             if (gameRunning) {
-                player.setGameMode(GameMode.SPECTATOR);
                 return true;
             }
 
-            player.setGameMode(GameMode.SURVIVAL);
             return false;
         }
 
         if (disconnectedDuringGamePlayers.contains(playerId) && gameRunning) {
             participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            player.setGameMode(GameMode.SPECTATOR);
             return true;
         }
 
         if (gameRunning) {
             participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            player.setGameMode(GameMode.SPECTATOR);
             return true;
         }
 
         participants.put(playerId, new GamePlayer(playerId, player.getName(), false));
-        player.setGameMode(GameMode.SURVIVAL);
         return false;
     }
 
@@ -61,7 +56,6 @@ public class GameParticipantManager {
         disconnectedDuringGamePlayers.remove(playerId);
         if (gameRunning) {
             participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            player.setGameMode(GameMode.SPECTATOR);
             return LeaveResult.LEFT_AND_SPECTATING;
         }
 
@@ -99,12 +93,10 @@ public class GameParticipantManager {
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             UUID playerId = onlinePlayer.getUniqueId();
             if (optedOutPlayers.contains(playerId)) {
-                onlinePlayer.setGameMode(GameMode.SPECTATOR);
                 continue;
             }
 
             participants.put(playerId, new GamePlayer(playerId, onlinePlayer.getName(), false));
-            onlinePlayer.setGameMode(GameMode.SURVIVAL);
         }
     }
 

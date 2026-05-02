@@ -6,11 +6,11 @@ import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
-import org.antredesloutres.ottergames.models.participant.GameParticipantManager;
+import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
+import org.antredesloutres.ottergames.utils.GameParticipantManager;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.antredesloutres.ottergames.utils.ArenaSlotManager;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -38,6 +38,7 @@ public class GameManager {
     private List<ArenaInstance> currentArenas = Collections.emptyList();
     private int timer;
     private int startCountdownSecondsRemaining;
+    private int currentRound;
     private boolean isPaused = true;
     private boolean running = false;
     private BukkitTask loopTask;
@@ -50,20 +51,32 @@ public class GameManager {
         this.games.add(new SoloGame());
     }
 
-    public void startGameLoop() {
-        if (running) return;
+    public boolean startGameLoop() {
+        if (running) return false;
 
         if (loopTask != null) {
             loopTask.cancel();
             loopTask = null;
         }
 
+        participantManager.registerOnlinePlayersAsParticipants();
+        GameSelectionContext initialSelectionContext = buildSelectionContext(1);
+        if (getSelectableGames(initialSelectionContext).isEmpty()) {
+            plugin.getLogger().warning(
+                    "Cannot start game loop: no minigame available for round " + initialSelectionContext.roundNumber()
+                            + " (activeParticipants=" + initialSelectionContext.activeParticipantCount()
+                            + ", spectators=" + initialSelectionContext.spectatorCount()
+                            + ", total=" + initialSelectionContext.totalParticipantCount() + ")."
+            );
+            return false;
+        }
+
         this.running = true;
         this.isPaused = true;
         this.timer = 0;
         this.startCountdownSecondsRemaining = INITIAL_COUNTDOWN_SECONDS;
+        this.currentRound = 0;
         this.currentGame = null;
-        participantManager.registerOnlinePlayersAsParticipants();
 
         this.loopTask = new BukkitRunnable() {
             @Override
@@ -73,6 +86,7 @@ public class GameManager {
         }.runTaskTimer(plugin, 0L, 20L);
 
         plugin.getLogger().info("Ottergame game loop started.");
+        return true;
     }
 
     public void stopEverything() {
@@ -88,13 +102,6 @@ public class GameManager {
             this.loopTask = null;
         }
 
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            UUID playerId = onlinePlayer.getUniqueId();
-            if (participantManager.isPlayerSpectator(playerId) || participantManager.isPlayerOptedOut(playerId)) {
-                onlinePlayer.setGameMode(GameMode.SURVIVAL);
-            }
-        }
-
         for (UUID playerId : participantManager.getOptedOutPlayerIds()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
@@ -106,6 +113,7 @@ public class GameManager {
         this.isPaused = true;
         this.timer = 0;
         this.startCountdownSecondsRemaining = 0;
+        this.currentRound = 0;
         this.running = false;
         participantManager.clearAll();
         participantManager.registerOnlinePlayersAsParticipants();
@@ -148,15 +156,32 @@ public class GameManager {
         }
 
         if (isPaused) {
-            startNextGame();
+            startNextMinigame();
         } else {
-            stopCurrentGame();
+            stopCurrentMinigame();
         }
     }
 
-    private void startNextGame() {
-        currentGame = games.get(random.nextInt(games.size()));
-        currentArenas = arenaSlotManager.allocate(currentGame.getStructureName(), currentGame.getInstanceCount());
+    private void startNextMinigame() {
+        GameSelectionContext selectionContext = buildSelectionContext(currentRound + 1);
+
+        List<Minigame> selectableGames = getSelectableGames(selectionContext);
+        if (selectableGames.isEmpty()) {
+            currentGame = null;
+            Bukkit.broadcastMessage("§cAucun mini-jeu compatible avec la situation actuelle. Partie arrêtée.");
+            plugin.getLogger().warning(
+                    "No minigame available for round " + selectionContext.roundNumber()
+                            + " (activeParticipants=" + selectionContext.activeParticipantCount()
+                            + ", spectators=" + selectionContext.spectatorCount()
+                            + ", total=" + selectionContext.totalParticipantCount() + "). Stopping game loop."
+            );
+            stopEverything();
+            return;
+        }
+
+        currentGame = selectableGames.get(random.nextInt(selectableGames.size()));
+        currentArenas = arenaSlotManager.allocate(currentGame.getStructureName(), currentGame.getInstanceCount(selectionContext));
+        currentRound = selectionContext.roundNumber();
         isPaused = false;
         timer = currentGame.getDurationSeconds();
 
@@ -164,7 +189,7 @@ public class GameManager {
         plugin.getLogger().info("Minigame started: " + currentGame.getName() + " (" + timer + "s).");
     }
 
-    private void stopCurrentGame() {
+    private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
         currentGame.onEnd();
         arenaSlotManager.free(currentArenas);
@@ -195,6 +220,23 @@ public class GameManager {
         });
     }
 
+    private List<Minigame> getSelectableGames(GameSelectionContext selectionContext) {
+        List<Minigame> selectableGames = new ArrayList<>();
+        for (Minigame game : games) {
+            if (game.canBeSelected(selectionContext)) {
+                selectableGames.add(game);
+            }
+        }
+        return selectableGames;
+    }
+
+    private GameSelectionContext buildSelectionContext(int roundNumber) {
+        int activeParticipantCount = participantManager.getActiveParticipantCount();
+        int spectatorCount = participantManager.getSpectatorParticipantCount();
+        int totalParticipantCount = activeParticipantCount + spectatorCount;
+        return new GameSelectionContext(roundNumber, activeParticipantCount, spectatorCount, totalParticipantCount);
+    }
+
     public boolean isPlayerOptedOut(UUID playerId) {
         return participantManager.isPlayerOptedOut(playerId);
     }
@@ -217,6 +259,10 @@ public class GameManager {
 
     public List<List<GamePlayer>> createParticipantGroups(int groupSize, boolean shuffle) {
         return participantManager.createActiveGroups(groupSize, shuffle);
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
     }
 
     public enum LeaveResult {
