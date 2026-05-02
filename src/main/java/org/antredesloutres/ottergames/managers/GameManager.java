@@ -247,22 +247,11 @@ public class GameManager {
             return;
         }
 
-        List<GamePlayer> activeParticipants = participantManager.getActiveParticipants();
-        if (activeParticipants.isEmpty()) {
-            return;
-        }
+        // Shuffle and group players using the participant manager
+        int playersPerArena = Math.max(1, participantManager.getActiveParticipantCount() / currentArenas.size());
+        List<List<GamePlayer>> playersByArena = participantManager.createActiveGroups(playersPerArena);
 
-        List<List<GamePlayer>> playersByArena = new ArrayList<>();
-        for (int i = 0; i < currentArenas.size(); i++) {
-            playersByArena.add(new ArrayList<>());
-        }
-
-        for (int i = 0; i < activeParticipants.size(); i++) {
-            int arenaIndex = i % currentArenas.size();
-            playersByArena.get(arenaIndex).add(activeParticipants.get(i));
-        }
-
-        for (int arenaIndex = 0; arenaIndex < playersByArena.size(); arenaIndex++) {
+        for (int arenaIndex = 0; arenaIndex < playersByArena.size() && arenaIndex < currentArenas.size(); arenaIndex++) {
             ArenaInstance arena = currentArenas.get(arenaIndex);
             List<GamePlayer> playersInArena = playersByArena.get(arenaIndex);
             for (int playerIndex = 0; playerIndex < playersInArena.size(); playerIndex++) {
