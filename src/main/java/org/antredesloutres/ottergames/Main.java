@@ -6,16 +6,23 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin {
 
+    private GameManager gameManager;
+
     @Override
     public void onEnable() {
+        this.gameManager = new GameManager(this);
         new ListenersHandler(this).setup(); // Enables listeners
-        new CommandHandler(this).setup(); // Enables commands
+        new CommandHandler(this, gameManager).setup(); // Enables commands
 
         getLogger().info("Ottergames ready!");
     }
 
     @Override
     public void onDisable() {
+        if (gameManager != null) {
+            gameManager.stopEverything();
+        }
+
         getLogger().info("Ottergames disabled!");
     }
 

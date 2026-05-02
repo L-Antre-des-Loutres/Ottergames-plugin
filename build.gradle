@@ -33,6 +33,10 @@ tasks.withType(JavaCompile).configureEach {
     options.release.set(targetJavaVersion)
 }
 
+tasks.named('jar') {
+    archiveFileName = 'ottergames.jar'
+}
+
 tasks {
     runServer {
         // This downloads and runs the server for you automatically
