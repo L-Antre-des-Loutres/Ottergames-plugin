@@ -57,4 +57,5 @@ public final class StructureSpawner {
         Structure structure = load(plugin, name);
         if (structure != null) place(structure, location);
     }
+
 }
