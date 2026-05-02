@@ -11,7 +11,7 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         this.gameManager = new GameManager(this);
-        new ListenersHandler(this).setup(); // Enables listeners
+        new ListenersHandler(this, gameManager).setup(); // Enables listeners
         new CommandHandler(this, gameManager).setup(); // Enables commands
 
         getLogger().info("Ottergames ready!");

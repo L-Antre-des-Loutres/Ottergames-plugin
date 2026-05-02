@@ -1,9 +1,11 @@
 package org.antredesloutres.ottergames.commands;
 
 import org.antredesloutres.ottergames.GameManager;
+import org.antredesloutres.ottergames.GameManager.LeaveResult;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 import org.jspecify.annotations.NonNull;
 
@@ -24,7 +26,7 @@ public class Ottergames implements TabExecutor {
     public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, @NonNull String @NonNull [] args) {
 
         if (args.length == 0) {
-            sender.sendMessage("§b[OtterGames] §7Utilisez §f/ottergames start §7ou §f/ottergames stop§7.");
+            sender.sendMessage("§b[OtterGames] §7Utilisez §f/ottergames start§7, §f/ottergames stop §7ou §f/ottergames leave§7.");
             return true;
         }
 
@@ -50,8 +52,28 @@ public class Ottergames implements TabExecutor {
                 sender.sendMessage("§cPartie interrompue.");
                 return true;
             }
+            case "leave" -> {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cCette commande est reservee aux joueurs.");
+                    return true;
+                }
+
+                LeaveResult leaveResult = gameManager.handlePlayerLeave(player);
+                if (leaveResult == LeaveResult.ALREADY_LEFT) {
+                    sender.sendMessage("§eTu es deja desinscrit des Ottergames.");
+                    return true;
+                }
+
+                if (leaveResult == LeaveResult.LEFT_AND_SPECTATING) {
+                    sender.sendMessage("§eTu es desinscrit des Ottergames et passe en spectateur jusqu'a la fin de la partie.");
+                    return true;
+                }
+
+                sender.sendMessage("§eTu es desinscrit des Ottergames.");
+                return true;
+            }
             default -> {
-                sender.sendMessage("§cCommande inconnue. Utilisez §f/ottergames start §cou §f/ottergames stop§c.");
+                sender.sendMessage("§cCommande inconnue. Utilisez §f/ottergames start§c, §f/ottergames stop §cou §f/ottergames leave§c.");
                 return true;
             }
         }
@@ -66,7 +88,7 @@ public class Ottergames implements TabExecutor {
         }
 
         String typed = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
-        StringUtil.copyPartialMatches(typed, Arrays.asList("start", "stop"), completions);
+        StringUtil.copyPartialMatches(typed, Arrays.asList("start", "stop", "leave"), completions);
         return completions;
     }
 
