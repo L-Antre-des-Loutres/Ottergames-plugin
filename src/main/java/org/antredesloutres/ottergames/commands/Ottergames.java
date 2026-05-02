@@ -43,7 +43,7 @@ public class Ottergames implements TabExecutor {
         }
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
-            case "start" -> {
+            case OTTERGAMES_ARGS_START -> {
                 if (gameManager.isRunning()) {
                     sender.sendMessage(OTTERGAMES_ALREADY_RUNNING);
                     return true;
@@ -51,7 +51,7 @@ public class Ottergames implements TabExecutor {
                 gameManager.startGameLoop();
                 sender.sendMessage(OTTERGAMES_STARTED);
             }
-            case "stop" -> {
+            case OTTERGAMES_ARGS_STOP -> {
                 if (!gameManager.isRunning()) {
                     sender.sendMessage(OTTERGAMES_NOT_RUNNING);
                     return true;
@@ -59,7 +59,7 @@ public class Ottergames implements TabExecutor {
                 gameManager.stopEverything();
                 sender.sendMessage(OTTERGAMES_STOPPED);
             }
-            case "leave" -> {
+            case OTTERGAMES_ARGS_LEAVE -> {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(COMMAND_USER_MUST_BE_PLAYER);
                     return true;
@@ -89,7 +89,7 @@ public class Ottergames implements TabExecutor {
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull String @NonNull [] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of("start", "stop", "leave"), completions);
+            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of(OTTERGAMES_ARGS_START, OTTERGAMES_ARGS_STOP, OTTERGAMES_ARGS_LEAVE), completions);
         }
         return completions;
     }

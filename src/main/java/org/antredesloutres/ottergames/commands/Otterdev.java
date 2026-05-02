@@ -48,7 +48,7 @@ public class Otterdev implements TabExecutor {
         }
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
-            case "test" -> {
+            case OTTERDEV_ARGS_TEST -> {
                 if (args.length < 2) {
                     player.sendMessage(OTTERDEV_TEST_USAGE);
                     return true;
@@ -75,7 +75,7 @@ public class Otterdev implements TabExecutor {
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull String @NonNull [] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of("test"), completions);
+            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of(OTTERDEV_ARGS_TEST), completions);
         }
         return completions;
     }
