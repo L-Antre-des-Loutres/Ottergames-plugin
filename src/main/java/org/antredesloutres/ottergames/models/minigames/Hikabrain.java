@@ -15,6 +15,7 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
@@ -33,7 +34,7 @@ public class Hikabrain implements Minigame {
 
     // Zones for the beds (goals to reach)
     // Expanded bounding boxes to ensure the point triggers when players reach the general bed area
-    private static final ArenaRegion GOAL_TEAM_1 = new ArenaRegion(1, 14, 9, 11, 16, 9);
+    private static final ArenaRegion GOAL_TEAM_1 = new ArenaRegion(1, 14, 9, 1, 16, 9);
     private static final ArenaRegion GOAL_TEAM_2 = new ArenaRegion(47, 14, 9, 47, 16, 9);
 
     private final Main plugin;
@@ -258,6 +259,9 @@ public class Hikabrain implements Minigame {
                     if (p != null) {
                         p.sendMessage("§6Un point a été marqué ! Score actuel: Rouge §c" + score1 + " §f- §9" + score2 + " §6Bleu");
                         
+                        // Heal the player
+                        healPlayer(p);
+
                         // Clear the player to avoid double pickup
                         p.getInventory().clear();
                         p.getInventory().setArmorContents(null);
@@ -278,5 +282,20 @@ public class Hikabrain implements Minigame {
             arena.clear();
             StructureSpawner.spawn(plugin, structure.structureName(), arena.origin());
         }
+    }
+
+    /**
+     * Restores a player's health, food level, saturation, and removes fire ticks.
+     *
+     * @param player the player to heal
+     */
+    private void healPlayer(Player player) {
+        var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (maxHealth != null) {
+            player.setHealth(maxHealth.getValue());
+        }
+        player.setFoodLevel(20);
+        player.setSaturation(5.0f);
+        player.setFireTicks(0);
     }
 }
