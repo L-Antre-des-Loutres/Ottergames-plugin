@@ -76,6 +76,16 @@ public class Spleef implements Minigame {
 
     @Override
     public void applyStartingInventory(Player player) {
+        ItemStack shovel = new ItemStack(Material.DIAMOND_SHOVEL);
+        player.getInventory().setItem(0, shovel);
+
+        // Apply Slow Falling effect for the "snow fall" feel (200 ticks = 10 seconds)
+        // This allows players to drift and choose where they land.
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 150, 0, false, false));
+        
+        // Spawn snowflake particles around the player at the start
+        player.spawnParticle(Particle.SNOWFLAKE, player.getLocation(), 50, 1.0, 1.0, 1.0, 0.05);
+        player.updateInventory();
     }
 
     @Override
