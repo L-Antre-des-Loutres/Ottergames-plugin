@@ -5,6 +5,8 @@ import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
 import org.antredesloutres.ottergames.models.arena.MinigameArena;
+import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondition;
+import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditions;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -30,14 +32,14 @@ import java.util.UUID;
  * Goal:
  * Be the last player standing on the platform.
  * Gameplay:
- * Players are equipped with an efficient shovel. Fall damage is disabled.
- * PvP is disabled.
+ * Players are equipped with an efficient shovel and Wind Charges in off-hand.
+ * Fall damage is disabled. PvP is disabled.
  * Elimination:
  * Players are eliminated if they fall below the platform (bounds exit).
  */
 public class Spleef implements Minigame {
 
-    private static final int SNOW_BLOCKS_FOR_WIND_CHARGE = 4;
+    private static final int SNOW_BLOCKS_FOR_WIND_CHARGE = 20;
     private static final int WIND_CHARGE_AMOUNT = 1;
 
     private final MinigameArena structure;
@@ -61,12 +63,17 @@ public class Spleef implements Minigame {
 
     @Override
     public int getDurationSeconds() {
-        return 120;
+        return 40;
     }
 
     @Override
     public String getStructureName() {
         return structure.structureName();
+    }
+
+    @Override
+    public List<SelectionCondition> getSelectionConditions() {
+        return List.of(SelectionConditions.minActiveParticipants(2));
     }
 
     @Override
@@ -81,6 +88,9 @@ public class Spleef implements Minigame {
 
     @Override
     public void applyStartingInventory(Player player) {
+        // Clear inventory to ensure clean start
+        player.getInventory().clear();
+
         ItemStack shovel = new ItemStack(Material.DIAMOND_SHOVEL);
         ItemMeta meta = shovel.getItemMeta();
         if (meta != null) {
@@ -88,6 +98,9 @@ public class Spleef implements Minigame {
             shovel.setItemMeta(meta);
         }
         player.getInventory().setItem(0, shovel);
+
+        // Give Wind Charges in off-hand
+        player.getInventory().setItemInOffHand(new ItemStack(Material.WIND_CHARGE, 16));
 
         // Apply Slow Falling effect for the "snow fall" feel (100 ticks = 5 seconds)
         // This allows players to drift and choose where they land.
@@ -112,7 +125,15 @@ public class Spleef implements Minigame {
             int count = playerBlocksBroken.getOrDefault(uuid, 0) + 1;
 
             if (count >= SNOW_BLOCKS_FOR_WIND_CHARGE) {
-                player.getInventory().addItem(new ItemStack(Material.WIND_CHARGE, WIND_CHARGE_AMOUNT));
+                ItemStack offHand = player.getInventory().getItemInOffHand();
+                if (offHand.getType() == Material.WIND_CHARGE) {
+                    offHand.setAmount(offHand.getAmount() + WIND_CHARGE_AMOUNT);
+                } else {
+                    player.getInventory().setItemInOffHand(new ItemStack(Material.WIND_CHARGE, WIND_CHARGE_AMOUNT));
+                }
+                
+                player.sendMessage("§b+ " + WIND_CHARGE_AMOUNT + " Wind Charge !");
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.5f);
                 count = 0;
             }
 
