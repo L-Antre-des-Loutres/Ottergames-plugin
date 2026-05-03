@@ -11,12 +11,12 @@ import java.util.Objects;
 
 /**
  * Represents a structure used by a minigame, along with named spawn zones.
- * <p>
- * Spawn zones are defined as <b>relative offsets</b> from the structure's origin
+ * 
+ * Spawn zones are defined as relative offsets from the structure's origin
  * (the lowest X/Y/Z corner placed by {@link StructureSpawner#place}).
  * Because they are relative, the same {@code MinigameStructure} definition works
  * no matter where the structure is placed in the world.
- * <p>
+ * 
  * Each zone has a unique name (e.g. {@code "team_red"}, {@code "team_blue"}) so
  * that the minigame can pick the right zone for each player at start time.
  */
@@ -107,7 +107,7 @@ public class MinigameStructure {
     }
 
     /**
-     * Convenience accessor: returns the <b>first</b> spawn zone that was inserted.
+     * Convenience accessor: returns the first spawn zone that was inserted.
      * Useful for minigames that only define a single zone.
      */
     public ArenaSpawnZone firstSpawnZone() {

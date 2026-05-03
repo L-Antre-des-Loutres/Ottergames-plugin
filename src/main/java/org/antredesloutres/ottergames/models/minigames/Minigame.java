@@ -84,7 +84,7 @@ public interface Minigame {
      * Applies the starting inventory and equipment to a player.
      * Override this to give items, armor, effects, etc. at the start of the game.
      * Called once when the game starts and optionally on respawn / bounds exit.
-     * <p>
+     * 
      * The default implementation does nothing (players keep whatever they had).
      *
      * @param player The player to equip.

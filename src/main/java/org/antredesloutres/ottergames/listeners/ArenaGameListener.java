@@ -22,13 +22,11 @@ import java.util.UUID;
 
 /**
  * Handles in-game arena rules:
- * <ul>
- *     <li>Keeps players within their arena bounds (teleport back + optional heal / inventory restore).</li>
- *     <li>Instant respawn without death screen (optional).</li>
- *     <li>Elimination on death (optional).</li>
- *     <li>Starting inventory restore on death (optional).</li>
- *     <li>Block modification protection via minigame rules.</li>
- * </ul>
+ * - Keeps players within their arena bounds (teleport back + optional heal / inventory restore).
+ * - Instant respawn without death screen (optional).
+ * - Elimination on death (optional).
+ * - Starting inventory restore on death (optional).
+ * - Block modification protection via minigame rules.
  */
 public class ArenaGameListener implements Listener {
 
