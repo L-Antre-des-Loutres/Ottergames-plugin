@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -25,6 +27,7 @@ import java.util.UUID;
  *     <li>Instant respawn without death screen (optional).</li>
  *     <li>Elimination on death (optional).</li>
  *     <li>Starting inventory restore on death (optional).</li>
+ *     <li>Block modification protection via minigame rules.</li>
  * </ul>
  */
 public class ArenaGameListener implements Listener {
@@ -169,6 +172,32 @@ public class ArenaGameListener implements Listener {
                 }.runTaskLater(plugin, 1L);
             }
         }.runTaskLater(plugin, 1L);
+    }
+
+    // ──────────────────────────────────────────────
+    //  Block modification handling
+    // ──────────────────────────────────────────────
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        checkBlockModification(event.getPlayer(), event.getBlock().getLocation(), event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        checkBlockModification(event.getPlayer(), event.getBlock().getLocation(), event);
+    }
+
+    private void checkBlockModification(Player player, Location blockLocation, org.bukkit.event.Cancellable event) {
+        Minigame currentGame = gameManager.getCurrentGame();
+        if (currentGame == null) return;
+
+        // Check if player is an active participant in an arena
+        if (gameManager.getPlayerArena(player.getUniqueId()) == null) return;
+
+        if (!currentGame.canModifyBlock(player, blockLocation, gameManager)) {
+            event.setCancelled(true);
+        }
     }
 
     // ──────────────────────────────────────────────

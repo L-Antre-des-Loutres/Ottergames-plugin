@@ -30,6 +30,17 @@ public interface Minigame {
     default List<SelectionCondition> getSelectionConditions() { return List.of(); }
     default SelectionConditionMode getSelectionConditionMode() { return SelectionConditionMode.ALL; }
 
+    /**
+     * Checks if a player can modify (place/break) a block at the given location.
+     * @param player The player attempting the modification.
+     * @param blockLocation The location of the block.
+     * @param gameManager The current game manager.
+     * @return True if allowed, false otherwise.
+     */
+    default boolean canModifyBlock(Player player, Location blockLocation, org.antredesloutres.ottergames.managers.GameManager gameManager) {
+        return true;
+    }
+
     // ──────────────────────────────────────────────
     //  Arena rules
     // ──────────────────────────────────────────────

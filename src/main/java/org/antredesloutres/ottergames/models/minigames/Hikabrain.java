@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class Hikabrain implements Minigame {
 
@@ -33,9 +34,14 @@ public class Hikabrain implements Minigame {
     private static final String TEAM_2 = "team_2";
 
     // Zones for the beds (goals to reach)
-    // Expanded bounding boxes to ensure the point triggers when players reach the general bed area
-    private static final ArenaRegion GOAL_TEAM_1 = new ArenaRegion(1, 14, 9, 1, 16, 9);
-    private static final ArenaRegion GOAL_TEAM_2 = new ArenaRegion(47, 14, 9, 47, 16, 9);
+    private static final ArenaRegion GOAL_TEAM_1 = new ArenaRegion(1, 13, 9, 1, 16, 9, false);
+    private static final ArenaRegion GOAL_TEAM_2 = new ArenaRegion(47, 13, 9, 47, 16, 9, false);
+
+    // Spawn zones (protected areas where blocks cannot be placed)
+    private static final ArenaRegion SPAWN_TEAM_1 = new ArenaRegion(1, 17, 8, 3, 20, 10, false);
+    private static final ArenaRegion SPAWN_TEAM_2 = new ArenaRegion(45, 17, 8, 47, 20, 10, false);
+
+    private static final List<ArenaRegion> PROTECTED_REGIONS = List.of(GOAL_TEAM_1, GOAL_TEAM_2, SPAWN_TEAM_1, SPAWN_TEAM_2);
 
     private final Main plugin;
     private final MinigameStructure structure;
@@ -54,10 +60,6 @@ public class Hikabrain implements Minigame {
                         TEAM_2, new ArenaSpawnZone(46, 19, 9, 46, 19, 9, 90.0f, 18.9f)
                 )
         );
-    }
-
-    public MinigameStructure getStructure() {
-        return structure;
     }
 
     @Override
@@ -92,13 +94,32 @@ public class Hikabrain implements Minigame {
 
     @Override
     public Location getSpawnLocation(ArenaInstance arena, Random random, int playerIndexInArena, int playersInArena) {
-        // Alternate players between the two team zones
         String zoneName = (playerIndexInArena % 2 == 0) ? TEAM_1 : TEAM_2;
         ArenaSpawnZone spawnZone = structure.spawnZone(zoneName);
         return spawnZone.randomLocation(arena, random);
     }
 
+    @Override
+    public boolean canModifyBlock(Player player, Location blockLocation, GameManager gameManager) {
+        ArenaInstance arena = gameManager.getPlayerArena(player.getUniqueId());
+        if (arena == null) return true;
 
+        for (ArenaRegion region : PROTECTED_REGIONS) {
+            if (region.contains(arena, blockLocation)) {
+                if (!region.allowBlockChanges()) {
+                    player.sendMessage("§c✗ Tu ne peux pas modifier cette zone!");
+                    return false;
+                }
+            }
+        }
+
+        if (blockLocation.getBlock().getType() == Material.OBSIDIAN) {
+            player.sendMessage("§c✗ Tu ne peux pas casser d'obsidienne!");
+            return false;
+        }
+
+        return true;
+    }
 
     @Override
     public boolean keepPlayersInBounds() {
@@ -113,11 +134,6 @@ public class Hikabrain implements Minigame {
     @Override
     public boolean healOnBoundsExit() {
         return true;
-    }
-
-    @Override
-    public boolean eliminateOnDeath() {
-        return false;
     }
 
     @Override
@@ -137,21 +153,16 @@ public class Hikabrain implements Minigame {
 
     @Override
     public void applyStartingInventory(Player player) {
-        // Hikabrain gear
         player.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
         player.getInventory().setItem(1, new ItemStack(Material.STONE_PICKAXE));
         player.getInventory().setItem(2, new ItemStack(Material.SANDSTONE, 64));
         player.getInventory().setItem(3, new ItemStack(Material.GOLDEN_APPLE, 8));
-
-        // Offhand
         player.getInventory().setItemInOffHand(new ItemStack(Material.SANDSTONE, 64));
 
-        // Basic armor
         player.getInventory().setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
         player.getInventory().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
         player.getInventory().setBoots(new ItemStack(Material.IRON_BOOTS));
 
-        // Colored Helmet
         ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
         LeatherArmorMeta meta = (LeatherArmorMeta) helmet.getItemMeta();
         if (meta != null) {
@@ -164,7 +175,6 @@ public class Hikabrain implements Minigame {
             helmet.setItemMeta(meta);
         }
         player.getInventory().setHelmet(helmet);
-
         player.updateInventory();
     }
 
@@ -180,13 +190,12 @@ public class Hikabrain implements Minigame {
             arenaScores.put(arena, scores);
         }
 
-        // We can determine team by checking the spawn location relative to the arena
         for (UUID playerId : gameManager.getPlayerSpawnLocations().keySet()) {
             Location spawn = gameManager.getPlayerSpawnLocation(playerId);
             ArenaInstance arena = gameManager.getPlayerArena(playerId);
             if (spawn != null && arena != null) {
                 double relX = spawn.getX() - arena.origin().getX();
-                if (relX < 24) { // Team 1 is at X=2, Team 2 is at X=46
+                if (relX < 24) {
                     playerTeams.put(playerId, TEAM_1);
                     Player p = Bukkit.getPlayer(playerId);
                     if (p != null) p.sendMessage("§aTu es dans la §cTeam Rouge §a!");
@@ -201,21 +210,41 @@ public class Hikabrain implements Minigame {
 
     @Override
     public void onEnd(GameManager gameManager) {
-        // Announce winners
         for (Map.Entry<ArenaInstance, Map<String, Integer>> entry : arenaScores.entrySet()) {
             Map<String, Integer> scores = entry.getValue();
             int score1 = scores.get(TEAM_1);
             int score2 = scores.get(TEAM_2);
-            String winnerTeam = score1 > score2 ? "§cTeam Rouge" : (score2 > score1 ? "§9Team Bleue" : "§7Personne (Égalité)");
-            
-            // Send to players in this arena
+
+            List<Player> team1Players = new java.util.ArrayList<>();
+            List<Player> team2Players = new java.util.ArrayList<>();
+
+            for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
+                if (playerEntry.getValue().equals(entry.getKey())) {
+                    Player p = Bukkit.getPlayer(playerEntry.getKey());
+                    if (p != null) {
+                        String team = playerTeams.get(playerEntry.getKey());
+                        if (TEAM_1.equals(team)) team1Players.add(p);
+                        else if (TEAM_2.equals(team)) team2Players.add(p);
+                    }
+                }
+            }
+
+            String winnerMessage;
+            if (score1 > score2) {
+                winnerMessage = "§c✨ Team Rouge ✨§a (" + team1Players.stream().map(Player::getName).collect(Collectors.joining(", ")) + ") a gagné!";
+            } else if (score2 > score1) {
+                winnerMessage = "§9✨ Team Bleue ✨§a (" + team2Players.stream().map(Player::getName).collect(Collectors.joining(", ")) + ") a gagné!";
+            } else {
+                winnerMessage = "§7✨ Égalité! ✨";
+            }
+
             for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
                 if (playerEntry.getValue().equals(entry.getKey())) {
                     Player p = Bukkit.getPlayer(playerEntry.getKey());
                     if (p != null) {
                         p.sendMessage("§6=== Fin du Hikabrain ===");
                         p.sendMessage("§eScore final: Rouge §c" + score1 + " §f- §9" + score2 + " §eBleu");
-                        p.sendMessage("§aGagnant: §b" + winnerTeam);
+                        p.sendMessage(winnerMessage);
                         p.playSound(p, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
                     }
                 }
@@ -233,15 +262,11 @@ public class Hikabrain implements Minigame {
         if (arena == null || team == null) return;
 
         boolean scored = false;
-
-        // Team 1 scores by reaching Team 2's goal
         if (team.equals(TEAM_1) && GOAL_TEAM_2.contains(arena, event.getTo())) {
             Map<String, Integer> scores = arenaScores.get(arena);
             scores.put(TEAM_1, scores.get(TEAM_1) + 1);
             scored = true;
-        } 
-        // Team 2 scores by reaching Team 1's goal
-        else if (team.equals(TEAM_2) && GOAL_TEAM_1.contains(arena, event.getTo())) {
+        } else if (team.equals(TEAM_2) && GOAL_TEAM_1.contains(arena, event.getTo())) {
             Map<String, Integer> scores = arenaScores.get(arena);
             scores.put(TEAM_2, scores.get(TEAM_2) + 1);
             scored = true;
@@ -252,22 +277,15 @@ public class Hikabrain implements Minigame {
             int score1 = scores.get(TEAM_1);
             int score2 = scores.get(TEAM_2);
 
-            // Announce point and reset
             for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
                 if (playerEntry.getValue().equals(arena)) {
                     Player p = Bukkit.getPlayer(playerEntry.getKey());
                     if (p != null) {
                         p.sendMessage("§6Un point a été marqué ! Score actuel: Rouge §c" + score1 + " §f- §9" + score2 + " §6Bleu");
-                        
-                        // Heal the player
                         healPlayer(p);
-
-                        // Clear the player to avoid double pickup
                         p.getInventory().clear();
                         p.getInventory().setArmorContents(null);
                         p.getInventory().setItemInOffHand(null);
-                        
-                        // Teleport back to spawn
                         Location spawn = gameManager.getPlayerSpawnLocation(p.getUniqueId());
                         if (spawn != null) {
                             p.teleport(spawn);
@@ -277,23 +295,14 @@ public class Hikabrain implements Minigame {
                     }
                 }
             }
-
-            // Reset structure
             arena.clear();
             StructureSpawner.spawn(plugin, structure.structureName(), arena.origin());
         }
     }
 
-    /**
-     * Restores a player's health, food level, saturation, and removes fire ticks.
-     *
-     * @param player the player to heal
-     */
     private void healPlayer(Player player) {
         var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth != null) {
-            player.setHealth(maxHealth.getValue());
-        }
+        if (maxHealth != null) player.setHealth(maxHealth.getValue());
         player.setFoodLevel(20);
         player.setSaturation(5.0f);
         player.setFireTicks(0);

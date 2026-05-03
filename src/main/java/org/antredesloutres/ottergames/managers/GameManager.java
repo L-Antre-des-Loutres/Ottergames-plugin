@@ -199,6 +199,12 @@ public class GameManager {
 
         teleportActiveParticipantsToArenas();
         currentGame.onStart(currentArenas, this);
+
+        // Register minigame events if it implements Listener
+        if (currentGame instanceof org.bukkit.event.Listener listener) {
+            Bukkit.getPluginManager().registerEvents(listener, plugin);
+        }
+
         plugin.getLogger().info("Minigame started: " + currentGame.getName() + " (" + timer + "s).");
     }
 

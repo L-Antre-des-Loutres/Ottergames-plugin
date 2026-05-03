@@ -6,7 +6,14 @@ import org.bukkit.Location;
 /**
  * Represents a generic 3D bounding box area relative to an arena's origin.
  */
-public record ArenaRegion(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+public record ArenaRegion(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, boolean allowBlockChanges) {
+
+    /**
+     * Creates a new ArenaRegion with block changes disabled by default.
+     */
+    public ArenaRegion(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        this(minX, minY, minZ, maxX, maxY, maxZ, false);
+    }
 
     public ArenaRegion {
         if (minX < 0 || minY < 0 || minZ < 0) {
@@ -23,13 +30,12 @@ public record ArenaRegion(int minX, int minY, int minZ, int maxX, int maxY, int 
     public boolean contains(ArenaInstance arena, Location location) {
         if (location.getWorld() == null || !location.getWorld().equals(arena.origin().getWorld())) return false;
 
-        double relX = location.getX() - arena.origin().getX();
-        double relY = location.getY() - arena.origin().getY();
-        double relZ = location.getZ() - arena.origin().getZ();
+        int relX = location.getBlockX() - arena.origin().getBlockX();
+        int relY = location.getBlockY() - arena.origin().getBlockY();
+        int relZ = location.getBlockZ() - arena.origin().getBlockZ();
 
-        // Check if within bounds (adding 1 to max to account for block boundaries)
-        return relX >= minX && relX <= (maxX + 1.0) &&
-               relY >= minY && relY <= (maxY + 2.0) && // Player is 2 blocks tall
-               relZ >= minZ && relZ <= (maxZ + 1.0);
+        return relX >= minX && relX <= maxX &&
+               relY >= minY && relY <= maxY &&
+               relZ >= minZ && relZ <= maxZ;
     }
 }
