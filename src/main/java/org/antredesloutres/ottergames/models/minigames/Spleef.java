@@ -9,14 +9,20 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.Tag;
+import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Spleef is a classic minigame where players try to make their opponents fall
@@ -31,7 +37,11 @@ import java.util.Random;
  */
 public class Spleef implements Minigame {
 
+    private static final int SNOW_BLOCKS_FOR_WIND_CHARGE = 4;
+    private static final int WIND_CHARGE_AMOUNT = 1;
+
     private final MinigameArena structure;
+    private final Map<UUID, Integer> playerBlocksBroken = new HashMap<>();
 
     public Spleef(Main plugin) {
         this.structure = new MinigameArena(
@@ -72,6 +82,11 @@ public class Spleef implements Minigame {
     @Override
     public void applyStartingInventory(Player player) {
         ItemStack shovel = new ItemStack(Material.DIAMOND_SHOVEL);
+        ItemMeta meta = shovel.getItemMeta();
+        if (meta != null) {
+            meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
+            shovel.setItemMeta(meta);
+        }
         player.getInventory().setItem(0, shovel);
 
         // Apply Slow Falling effect for the "snow fall" feel (100 ticks = 5 seconds)
@@ -91,9 +106,39 @@ public class Spleef implements Minigame {
             // In Spleef, we usually want blocks to break instantly and not drop anything
             blockLocation.getBlock().setType(Material.AIR);
             player.playSound(blockLocation, Sound.BLOCK_SNOW_BREAK, 1f, 1f);
+
+            // Reward system: Wind Charges
+            UUID uuid = player.getUniqueId();
+            int count = playerBlocksBroken.getOrDefault(uuid, 0) + 1;
+
+            if (count >= SNOW_BLOCKS_FOR_WIND_CHARGE) {
+                player.getInventory().addItem(new ItemStack(Material.WIND_CHARGE, WIND_CHARGE_AMOUNT));
+                count = 0;
+            }
+
+            playerBlocksBroken.put(uuid, count);
             return false; // Return false to cancel the actual event, since we manually set it to AIR
         }
         return false;
+    }
+
+    @Override
+    public void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent event, GameManager gameManager) {
+        Block block = event.getClickedBlock();
+        if (block == null) return;
+
+        // Standard Spleef rule: only doors allowed
+        if (!Tag.DOORS.isTagged(block.getType())) {
+            if (event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK || event.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @Override
+    public void onPlayerInteractEntity(org.bukkit.event.player.PlayerInteractEntityEvent event, GameManager gameManager) {
+        // Block all entity interactions in Spleef (Armor Stands, etc.)
+        event.setCancelled(true);
     }
 
     @Override
@@ -119,11 +164,11 @@ public class Spleef implements Minigame {
 
     @Override
     public void onStart(List<ArenaInstance> arenas, GameManager gameManager) {
-        // No special start logic
+        playerBlocksBroken.clear();
     }
 
     @Override
     public void onEnd(GameManager gameManager) {
-        // Broadcast the winner(s) could be added here if we tracked them
+        playerBlocksBroken.clear();
     }
 }

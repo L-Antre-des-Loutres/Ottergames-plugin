@@ -82,6 +82,12 @@ public class Lobby implements Minigame {
     }
 
     @Override
+    public void onPlayerInteractEntity(org.bukkit.event.player.PlayerInteractEntityEvent event, GameManager gameManager) {
+        // Block all entity interactions in Lobby
+        event.setCancelled(true);
+    }
+
+    @Override
     public boolean pvpEnabled() {
         return false;
     }

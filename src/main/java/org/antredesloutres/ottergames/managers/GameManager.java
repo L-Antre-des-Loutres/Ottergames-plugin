@@ -6,12 +6,9 @@ import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.models.minigames.Hikabrain;
 import org.antredesloutres.ottergames.models.minigames.Lobby;
-import org.antredesloutres.ottergames.models.minigames.PlaceholderGame;
-import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.minigames.Spleef;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
-import org.antredesloutres.ottergames.models.minigames.PlaceholderGame;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.bukkit.Bukkit;
@@ -65,7 +62,7 @@ public class GameManager {
         // this.games.add(new PlaceholderGame());
         // this.games.add(new SoloGame());
         this.games.add(new Spleef(plugin));
-        // this.games.add(new Hikabrain(plugin));
+        this.games.add(new Hikabrain(plugin));
     }
 
     public boolean startGameLoop() {
