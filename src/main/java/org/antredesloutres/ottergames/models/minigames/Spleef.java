@@ -131,9 +131,6 @@ public class Spleef implements Minigame {
                 } else {
                     player.getInventory().setItemInOffHand(new ItemStack(Material.WIND_CHARGE, WIND_CHARGE_AMOUNT));
                 }
-                
-                player.sendMessage("§b+ " + WIND_CHARGE_AMOUNT + " Wind Charge !");
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.5f);
                 count = 0;
             }
 
