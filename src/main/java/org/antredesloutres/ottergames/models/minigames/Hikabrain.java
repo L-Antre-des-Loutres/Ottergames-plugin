@@ -2,13 +2,13 @@ package org.antredesloutres.ottergames.models.minigames;
 
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.managers.GameManager;
-import org.antredesloutres.ottergames.models.ArenaInstance;
+import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondition;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditions;
-import org.antredesloutres.ottergames.models.structures.ArenaRegion;
-import org.antredesloutres.ottergames.models.structures.ArenaSpawnZone;
-import org.antredesloutres.ottergames.models.structures.MinigameStructure;
+import org.antredesloutres.ottergames.models.arena.ArenaRegion;
+import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
+import org.antredesloutres.ottergames.models.arena.MinigameArena;
 import org.antredesloutres.ottergames.utils.StructureSpawner;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -71,14 +71,14 @@ public class Hikabrain implements Minigame {
     private static final List<ArenaRegion> PROTECTED_REGIONS = List.of(GOAL_TEAM_1, GOAL_TEAM_2, SPAWN_TEAM_1, SPAWN_TEAM_2);
 
     private final Main plugin;
-    private final MinigameStructure structure;
+    private final MinigameArena structure;
 
     private final Map<UUID, String> playerTeams = new HashMap<>();
     private final Map<ArenaInstance, Map<String, Integer>> arenaScores = new HashMap<>();
 
     public Hikabrain(Main plugin) {
         this.plugin = plugin;
-        this.structure = new MinigameStructure(
+        this.structure = new MinigameArena(
                 plugin,
                 "ottergames_hikabrain_map",
                 2,

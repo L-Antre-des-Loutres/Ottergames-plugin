@@ -1,6 +1,6 @@
 package org.antredesloutres.ottergames.models.minigames;
 
-import org.antredesloutres.ottergames.models.ArenaInstance;
+import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondition;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditionMode;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditions;

@@ -1,6 +1,5 @@
-package org.antredesloutres.ottergames.models.structures;
+package org.antredesloutres.ottergames.models.arena;
 
-import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.bukkit.Location;
 import org.bukkit.util.BlockVector;
 

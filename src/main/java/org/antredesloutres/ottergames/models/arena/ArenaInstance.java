@@ -1,4 +1,4 @@
-package org.antredesloutres.ottergames.models;
+package org.antredesloutres.ottergames.models.arena;
 
 import org.bukkit.Location;
 import org.bukkit.Material;

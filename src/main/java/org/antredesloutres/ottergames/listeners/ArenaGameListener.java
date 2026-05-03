@@ -1,7 +1,7 @@
 package org.antredesloutres.ottergames.listeners;
 
 import org.antredesloutres.ottergames.managers.GameManager;
-import org.antredesloutres.ottergames.models.ArenaInstance;
+import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -41,7 +41,6 @@ public class ArenaGameListener implements Listener {
     // ──────────────────────────────────────────────
     //  Bounds check
     // ──────────────────────────────────────────────
-
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerMove(PlayerMoveEvent event) {
         // Only check if block position actually changed (ignore head rotation)
@@ -89,7 +88,6 @@ public class ArenaGameListener implements Listener {
     // ──────────────────────────────────────────────
     //  Damage handling
     // ──────────────────────────────────────────────
-
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
@@ -108,7 +106,6 @@ public class ArenaGameListener implements Listener {
     // ──────────────────────────────────────────────
     //  Death handling
     // ──────────────────────────────────────────────
-
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Minigame currentGame = gameManager.getCurrentGame();
@@ -175,7 +172,6 @@ public class ArenaGameListener implements Listener {
     // ──────────────────────────────────────────────
     //  Block modification handling
     // ──────────────────────────────────────────────
-
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         checkBlockModification(event.getPlayer(), event.getBlock().getLocation(), event);
@@ -201,7 +197,6 @@ public class ArenaGameListener implements Listener {
     // ──────────────────────────────────────────────
     //  Utilities
     // ──────────────────────────────────────────────
-
     private void healPlayer(Player player) {
         var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHealth != null) {

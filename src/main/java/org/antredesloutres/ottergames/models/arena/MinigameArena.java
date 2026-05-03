@@ -1,4 +1,4 @@
-package org.antredesloutres.ottergames.models.structures;
+package org.antredesloutres.ottergames.models.arena;
 
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.utils.StructureSpawner;
@@ -11,24 +11,20 @@ import java.util.Objects;
 
 /**
  * Represents a structure used by a minigame, along with named spawn zones.
- * 
  * Spawn zones are defined as relative offsets from the structure's origin
  * (the lowest X/Y/Z corner placed by {@link StructureSpawner#place}).
- * Because they are relative, the same {@code MinigameStructure} definition works
+ * Because they are relative, the same {@code MinigameArena} definition works
  * no matter where the structure is placed in the world.
- * 
  * Each zone has a unique name (e.g. {@code "team_red"}, {@code "team_blue"}) so
  * that the minigame can pick the right zone for each player at start time.
  */
-public class MinigameStructure {
+public class MinigameArena {
     private final String structureName;
     private final Structure structure;
     private final int playersPerStructure;
     private final Map<String, ArenaSpawnZone> spawnZones;
-
     /**
-     * Creates a new MinigameStructure.
-     *
+     * Creates a new MinigameArena.
      * @param plugin               Plugin instance used to load the structure NBT.
      * @param structureName        Name of the structure file (without .nbt extension).
      * @param playersPerStructure  Maximum number of players that fit in one instance of this structure. Must be &gt; 0.
@@ -36,7 +32,7 @@ public class MinigameStructure {
      *                             Must contain at least one entry.
      * @throws IllegalArgumentException if the structure NBT cannot be found, or if parameters are invalid.
      */
-    public MinigameStructure(
+    public MinigameArena(
             Main plugin,
             String structureName,
             int playersPerStructure,
@@ -67,7 +63,6 @@ public class MinigameStructure {
     // ──────────────────────────────────────────────
     //  Accessors
     // ──────────────────────────────────────────────
-
     /** @return The structure file name (without extension). */
     public String structureName() {
         return structureName;
@@ -117,7 +112,6 @@ public class MinigameStructure {
     // ──────────────────────────────────────────────
     //  Utilities
     // ──────────────────────────────────────────────
-
     /**
      * Computes how many instances of this structure are required to host
      * the given number of players.

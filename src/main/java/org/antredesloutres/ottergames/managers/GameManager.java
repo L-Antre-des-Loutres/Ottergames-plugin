@@ -5,7 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.models.minigames.Hikabrain;
-import org.antredesloutres.ottergames.models.ArenaInstance;
+import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
@@ -53,8 +53,8 @@ public class GameManager {
         this.participantManager = new GameParticipantManager();
 
         // Add games
-//        this.games.add(new PlaceholderGame());
-//        this.games.add(new SoloGame());
+        // this.games.add(new PlaceholderGame());
+        // this.games.add(new SoloGame());
         this.games.add(new Hikabrain(plugin));
     }
 

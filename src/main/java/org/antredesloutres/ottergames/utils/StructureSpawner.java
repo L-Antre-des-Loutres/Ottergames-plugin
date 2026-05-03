@@ -1,7 +1,7 @@
 package org.antredesloutres.ottergames.utils;
 
 import org.antredesloutres.ottergames.Main;
-import org.antredesloutres.ottergames.models.ArenaInstance;
+import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.bukkit.Location;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
