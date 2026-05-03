@@ -352,6 +352,11 @@ public class Hikabrain implements Minigame {
         }
     }
 
+    @Override
+    public void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent event, GameManager gameManager) {
+        // No specific interaction rules for Hikabrain yet
+    }
+
     private void healPlayer(Player player) {
         var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHealth != null) player.setHealth(maxHealth.getValue());

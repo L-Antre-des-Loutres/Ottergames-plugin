@@ -5,8 +5,12 @@ import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -15,7 +19,10 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -28,6 +35,8 @@ import java.util.UUID;
  * - Elimination on death (optional).
  * - Starting inventory restore on death (optional).
  * - Block modification protection via minigame rules.
+ * - Interaction protection (defined by minigames).
+ * - Wind Charge special handling (vanilla throw everywhere, block interaction restricted).
  */
 public class ArenaGameListener implements Listener {
 
@@ -37,6 +46,61 @@ public class ArenaGameListener implements Listener {
     public ArenaGameListener(GameManager gameManager, JavaPlugin plugin) {
         this.gameManager = gameManager;
         this.plugin = plugin;
+    }
+
+    // ──────────────────────────────────────────────
+    //  Interaction handling
+    // ──────────────────────────────────────────────
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+
+        Minigame currentGame = gameManager.getCurrentGame();
+        if (currentGame == null) return;
+
+        // Only handle if in an arena/lobby
+        Location loc = (block != null) ? block.getLocation() : player.getLocation();
+        if (gameManager.getArenaAt(loc) == null && !gameManager.isInLobby(loc)) {
+            return;
+        }
+
+        // GLOBAL DEFAULT: Wind Charge handling
+        if (item != null && item.getType() == Material.WIND_CHARGE) {
+            if (block != null && !Tag.DOORS.isTagged(block.getType())) {
+                // Deny block interaction (trapdoors, chests, etc.) but allow throwing the charge
+                event.setUseInteractedBlock(Event.Result.DENY);
+                event.setUseItemInHand(Event.Result.ALLOW);
+            }
+            return; // Don't call minigame logic for Wind Charges, it's handled globally
+        }
+
+        if (block == null) return;
+        currentGame.onPlayerInteract(event, gameManager);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = player.getInventory().getItem(event.getHand());
+
+        Minigame currentGame = gameManager.getCurrentGame();
+        if (currentGame == null) return;
+
+        // Only handle if in an arena/lobby
+        if (gameManager.getArenaAt(event.getRightClicked().getLocation()) == null && !gameManager.isInLobby(event.getRightClicked().getLocation())) {
+            return;
+        }
+
+        // GLOBAL DEFAULT: Block entity interaction when holding a Wind Charge
+        if (item.getType() == Material.WIND_CHARGE) {
+            event.setCancelled(true);
+            return;
+        }
+
+        currentGame.onPlayerInteractEntity(event, gameManager);
     }
 
     // ──────────────────────────────────────────────
@@ -106,7 +170,7 @@ public class ArenaGameListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof Player victim)) return;
+        if (!(event.getEntity() instanceof Player)) return;
 
         Minigame currentGame = gameManager.getCurrentGame();
         if (currentGame == null) return;
