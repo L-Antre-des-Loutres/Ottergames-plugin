@@ -28,6 +28,33 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
+/**
+ * Hikabrain is a fast-paced, team-based minigame where players are divided into two teams (Red and Blue).
+ * <GOAL>
+ * Goal:
+ * Compete to reach the opposing team's goal area while defending your own.
+ * Each time a player enters the enemy goal, their team scores a point, the arena is reset, 
+ * and players are teleported back to spawn.
+ * <GAMEPLAY>
+ * Gameplay:
+ * Players can place blocks (Sandstone) to build bridges or defenses. Fall damage is disabled, 
+ * and players receive a full set of team-colored leather armor and basic tools.
+ * <PROTECTION>
+ * Map Protection:
+ * Specific zones are protected from modification:
+ * - Spawn areas (SPAWN_TEAM_1, SPAWN_TEAM_2)
+ * - Goal areas (GOAL_TEAM_1, GOAL_TEAM_2)
+ * - Obsidian blocks cannot be broken.
+ * <SELECT CONDITION>
+ * Selection & Launch Conditions:
+ * - Minimum active participants: 2 (Even number required).
+ * - Duration: 120 seconds.
+ * - Structure: "ottergames_hikabrain_map".
+ * <VICTORY CONDITION>
+ * Victory:
+ * The team with the most points when the timer reaches zero wins the game.
+ */
 public class Hikabrain implements Minigame {
 
     private static final String TEAM_1 = "team_1";
@@ -69,7 +96,7 @@ public class Hikabrain implements Minigame {
 
     @Override
     public int getDurationSeconds() {
-        return 120;
+        return 60;
     }
 
     @Override
@@ -84,7 +111,9 @@ public class Hikabrain implements Minigame {
 
     @Override
     public List<SelectionCondition> getSelectionConditions() {
-        return List.of(SelectionConditions.minActiveParticipants(1));
+        return List.of(SelectionConditions.minActiveParticipants(2),
+                SelectionConditions.activeParticipantCountIsEven()
+        );
     }
 
     @Override
