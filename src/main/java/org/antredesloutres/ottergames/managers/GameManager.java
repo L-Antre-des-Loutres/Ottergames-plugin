@@ -58,7 +58,7 @@ public class GameManager {
         // Add games
         // this.games.add(new PlaceholderGame());
         // this.games.add(new SoloGame());
-        // this.games.add(new Hikabrain(plugin));
+        //this.games.add(new Hikabrain(plugin));
         this.games.add(new Dropper());
     }
 
@@ -388,6 +388,16 @@ public class GameManager {
 
     public Location getPlayerSpawnLocation(UUID playerId) {
         return playerSpawnLocations.get(playerId);
+    }
+
+    // Picks a new random spawn for the player (via the current minigame's respawn logic), stores and returns it.
+    // Returns null if the player has no arena assignment or no game is running.
+    public Location rerandomizePlayerSpawn(UUID playerId) {
+        ArenaInstance arena = playerArenaAssignments.get(playerId);
+        if (arena == null || currentGame == null) return null;
+        Location newSpawn = currentGame.getRespawnLocation(playerId, arena, random);
+        playerSpawnLocations.put(playerId, newSpawn.clone());
+        return newSpawn;
     }
 
     public ArenaInstance getPlayerArena(UUID playerId) {

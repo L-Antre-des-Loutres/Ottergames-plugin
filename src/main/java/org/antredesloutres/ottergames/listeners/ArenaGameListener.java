@@ -178,8 +178,11 @@ public class ArenaGameListener implements Listener {
                             player.setGameMode(GameMode.SPECTATOR);
                             player.sendMessage("§cÉliminé ! Tu es maintenant spectateur.");
                         } else {
-                            // Teleport back to spawn
-                            player.teleport(spawnLocation);
+                            // Re-randomize spawn on each death and teleport there
+                            Location newSpawn = gameManager.rerandomizePlayerSpawn(playerId);
+                            if (newSpawn != null) {
+                                player.teleport(newSpawn);
+                            }
 
                             // Restore starting inventory if enabled
                             if (restoreInventory) {

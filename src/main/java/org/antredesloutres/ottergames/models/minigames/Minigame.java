@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 public interface Minigame {
     String getName();
@@ -25,6 +26,10 @@ public interface Minigame {
     default ArenaSpawnZone getSpawnZone(ArenaInstance arena) { return ArenaSpawnZone.full(arena.size()); }
     default Location getSpawnLocation(ArenaInstance arena, Random random, int playerIndexInArena, int playersInArena) {
         return getSpawnZone(arena).randomLocation(arena, random);
+    }
+    // Called on each respawn. Override when respawn logic differs from initial spawn (e.g. team-based games).
+    default Location getRespawnLocation(UUID playerId, ArenaInstance arena, Random random) {
+        return getSpawnLocation(arena, random, 0, 1);
     }
     default boolean canBeSelected(int activeParticipantCount) { return true; }
     default List<SelectionCondition> getSelectionConditions() { return List.of(); }
