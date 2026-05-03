@@ -52,10 +52,11 @@ public class ArenaSlotManager {
     }
 
     /**
-     * Allocates a contiguous batch of arena slots for the given structure and instance count.
-     * @param structureName The name of the structure to load and place for each instance. Must be present in the plugin's resources/structures folder.
-     * @param instanceCount The number of instances to allocate. Must be positive.
-     * @return A list of ArenaInstance objects representing the allocated arenas, or an empty list if allocation failed (e.g. invalid structure name or non-positive instance count).
+     * Allocates a batch of arena slots for the given structure and instance count.
+     * Instances are spread along the Z-axis (left/right) starting from ARENA_BASE_Z.
+     * @param structureName The name of the structure to load and place for each instance.
+     * @param instanceCount The number of instances to allocate.
+     * @return A list of ArenaInstance objects representing the allocated arenas.
      */
     public List<ArenaInstance> allocate(String structureName, int instanceCount) {
         if (instanceCount <= 0) return Collections.emptyList();
@@ -66,23 +67,28 @@ public class ArenaSlotManager {
         plugin.getLogger().info("Loaded structure " + structureName
                 + " size=" + structure.getSize().getBlockX() + "x" + structure.getSize().getBlockY() + "x" + structure.getSize().getBlockZ());
 
-        int instanceWidth = structure.getSize().getBlockX();
-        int batchWidth = instanceWidth * instanceCount + OUTER_PADDING * (instanceCount - 1);
-        int totalReserved = batchWidth + OUTER_PADDING;
+        int instanceWidthX = structure.getSize().getBlockX();
+        int instanceDepthZ = structure.getSize().getBlockZ();
+        
+        // The batch reserved width on X is just one structure's width + padding
+        int totalReservedX = instanceWidthX + OUTER_PADDING;
 
-        int batchStartX = findOrExtend(totalReserved);
-        allocatedBatches.put(batchStartX, batchStartX + totalReserved);
+        int batchStartX = findOrExtend(totalReservedX);
+        allocatedBatches.put(batchStartX, batchStartX + totalReservedX);
 
         List<ArenaInstance> result = new ArrayList<>();
-        int cursorX = batchStartX;
 
         for (int i = 0; i < instanceCount; i++) {
-            Location origin = new Location(getWorld(), cursorX, ARENA_BASE_Y, ARENA_BASE_Z);
+            // Calculate Z offset to spread left and right
+            // i=0 -> 0, i=1 -> 1, i=2 -> -1, i=3 -> 2, i=4 -> -2...
+            int multiplier = (i + 1) / 2 * ((i % 2 == 0) ? 1 : -1);
+            int zOffset = multiplier * (instanceDepthZ + OUTER_PADDING);
+            
+            Location origin = new Location(getWorld(), batchStartX, ARENA_BASE_Y, ARENA_BASE_Z + zOffset);
             result.add(StructureSpawner.place(structure, origin));
+            
             plugin.getLogger().info("Placed instance " + (i + 1) + "/" + instanceCount
-                    + " @ x=" + cursorX + " y=" + ARENA_BASE_Y + " z=" + ARENA_BASE_Z);
-            cursorX += instanceWidth;
-            if (i < instanceCount - 1) cursorX += OUTER_PADDING;
+                    + " @ x=" + batchStartX + " y=" + ARENA_BASE_Y + " z=" + (ARENA_BASE_Z + zOffset));
         }
 
         return result;
