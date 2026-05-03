@@ -5,13 +5,16 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.models.minigames.Hikabrain;
+import org.antredesloutres.ottergames.models.minigames.Lobby;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
+import org.antredesloutres.ottergames.models.minigames.PlaceholderGame;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -36,6 +39,8 @@ public class GameManager {
     private final Main plugin;
     private final ArenaSlotManager arenaSlotManager;
 
+    private final Lobby lobbyGame;
+    private List<ArenaInstance> lobbyArenas = Collections.emptyList();
     private Minigame currentGame;
     private List<ArenaInstance> currentArenas = Collections.emptyList();
     private final Map<UUID, Location> playerSpawnLocations = new HashMap<>();
@@ -51,9 +56,10 @@ public class GameManager {
         this.plugin = plugin;
         this.arenaSlotManager = new ArenaSlotManager(plugin);
         this.participantManager = new GameParticipantManager();
+        this.lobbyGame = new Lobby(plugin);
 
         // Add games
-        // this.games.add(new PlaceholderGame());
+        this.games.add(new PlaceholderGame());
         // this.games.add(new SoloGame());
         this.games.add(new Hikabrain(plugin));
     }
@@ -78,12 +84,17 @@ public class GameManager {
             return false;
         }
 
+        // Allocate lobby
+        lobbyArenas = arenaSlotManager.allocate(lobbyGame.getStructureName(), 1);
+
         this.running = true;
         this.isPaused = true;
         this.timer = 0;
         this.startCountdownSecondsRemaining = INITIAL_COUNTDOWN_SECONDS;
         this.currentRound = 0;
-        this.currentGame = null;
+        this.currentGame = lobbyGame;
+
+        teleportToLobby();
 
         this.loopTask = new BukkitRunnable() {
             @Override
@@ -92,7 +103,7 @@ public class GameManager {
             }
         }.runTaskTimer(plugin, 0L, 20L);
 
-        plugin.getLogger().info("Ottergame game loop started.");
+        plugin.getLogger().info("Ottergame game loop started with lobby.");
         return true;
     }
 
@@ -104,7 +115,21 @@ public class GameManager {
             plugin.getLogger().info("Minigame stopped: " + currentGame.getName() + ".");
         }
 
+        // Free lobby
+        if (!lobbyArenas.isEmpty()) {
+            arenaSlotManager.free(lobbyArenas);
+            lobbyArenas = Collections.emptyList();
+        }
+
         clearAllParticipantsInventories();
+
+        // Teleport everyone to world spawn
+        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                player.teleport(player.getWorld().getSpawnLocation());
+            }
+        }
 
         playerSpawnLocations.clear();
         playerArenaAssignments.clear();
@@ -229,8 +254,38 @@ public class GameManager {
 
         plugin.getLogger().info("Minigame ended: " + gameName + ".");
         isPaused = true;
+        currentGame = lobbyGame;
         timer = BREAK_TIME_SECONDS;
         Bukkit.broadcastMessage("Break time! Next game starts in " + timer + " seconds.");
+
+        teleportToLobby();
+    }
+
+    private void teleportToLobby() {
+        if (lobbyArenas.isEmpty()) return;
+        ArenaInstance lobby = lobbyArenas.get(0);
+
+        List<GamePlayer> players = participantManager.getParticipants();
+        for (int i = 0; i < players.size(); i++) {
+            GamePlayer gamePlayer = players.get(i);
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player == null || !player.isOnline()) continue;
+
+            Location spawn = lobbyGame.getSpawnLocation(lobby, random, i, players.size());
+            playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
+            playerArenaAssignments.put(player.getUniqueId(), lobby);
+            player.teleport(spawn);
+            lobbyGame.applyStartingInventory(player);
+            healPlayer(player);
+        }
+    }
+
+    private void healPlayer(Player player) {
+        var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (maxHealth != null) player.setHealth(maxHealth.getValue());
+        player.setFoodLevel(20);
+        player.setSaturation(5.0f);
+        player.setFireTicks(0);
     }
 
     private void showStartCountdown(int secondsRemaining) {
@@ -296,6 +351,7 @@ public class GameManager {
                 player.teleport(spawnLocation);
                 
                 clearPlayerInventory(player);
+                healPlayer(player);
             }
         }
     }
@@ -346,6 +402,35 @@ public class GameManager {
 
     public Map<UUID, Location> getPlayerSpawnLocations() {
         return Collections.unmodifiableMap(playerSpawnLocations);
+    }
+
+    /**
+     * Finds the arena at the given location, if any (checks both current minigame arenas and the lobby).
+     * @param location The location to check.
+     * @return The ArenaInstance at that location, or null if none.
+     */
+    public ArenaInstance getArenaAt(Location location) {
+        // Check current minigame arenas
+        for (ArenaInstance arena : currentArenas) {
+            if (arena.contains(location)) return arena;
+        }
+        // Check lobby
+        for (ArenaInstance arena : lobbyArenas) {
+            if (arena.contains(location)) return arena;
+        }
+        return null;
+    }
+
+    /**
+     * Checks if the given location is within a lobby arena.
+     * @param location The location to check.
+     * @return True if inside a lobby arena, false otherwise.
+     */
+    public boolean isInLobby(Location location) {
+        for (ArenaInstance arena : lobbyArenas) {
+            if (arena.contains(location)) return true;
+        }
+        return false;
     }
 
     public boolean eliminatePlayer(UUID playerId) {

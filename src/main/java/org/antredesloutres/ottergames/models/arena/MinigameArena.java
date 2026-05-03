@@ -15,7 +15,7 @@ import java.util.Objects;
  * (the lowest X/Y/Z corner placed by {@link StructureSpawner#place}).
  * Because they are relative, the same {@code MinigameArena} definition works
  * no matter where the structure is placed in the world.
- * Each zone has a unique name (e.g. {@code "team_red"}, {@code "team_blue"}) so
+ * Each zone has a unique name (e.g. "team_red", "team_blue") so
  * that the minigame can pick the right zone for each player at start time.
  */
 public class MinigameArena {
@@ -27,7 +27,7 @@ public class MinigameArena {
      * Creates a new MinigameArena.
      * @param plugin               Plugin instance used to load the structure NBT.
      * @param structureName        Name of the structure file (without .nbt extension).
-     * @param playersPerStructure  Maximum number of players that fit in one instance of this structure. Must be &gt; 0.
+     * @param playersPerStructure  Maximum number of players that fit in one instance of this structure. Must be > 0.
      * @param spawnZones           Named spawn zones, defined as relative offsets from the structure origin.
      *                             Must contain at least one entry.
      * @throws IllegalArgumentException if the structure NBT cannot be found, or if parameters are invalid.
