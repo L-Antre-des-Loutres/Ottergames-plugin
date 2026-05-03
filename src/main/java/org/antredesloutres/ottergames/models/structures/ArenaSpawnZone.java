@@ -30,13 +30,6 @@ public record ArenaSpawnZone(int minX, int minY, int minZ, int maxX, int maxY, i
     }
 
     /**
-     * Convenience constructor – defaults to yaw = 0 and pitch = 0 (looking south, straight ahead).
-     */
-    public ArenaSpawnZone(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-        this(minX, minY, minZ, maxX, maxY, maxZ, 0.0f, 0.0f);
-    }
-
-    /**
      * Creates a zone covering the full structure size, facing south (yaw 0, pitch 0).
      */
     public static ArenaSpawnZone full(BlockVector size) {
@@ -59,17 +52,19 @@ public record ArenaSpawnZone(int minX, int minY, int minZ, int maxX, int maxY, i
         int minXClamped = clamp(minX, 0, arenaMaxX);
         int minYClamped = clamp(minY, 0, arenaMaxY);
         int minZClamped = clamp(minZ, 0, arenaMaxZ);
-        int maxXClamped = clamp(maxX, minXClamped, arenaMaxX);
-        int maxYClamped = clamp(maxY, minYClamped, arenaMaxY);
-        int maxZClamped = clamp(maxZ, minZClamped, arenaMaxZ);
 
-        double x = origin.getX() + minXClamped + random.nextDouble((maxXClamped - minXClamped) + 1.0d);
-        double y = origin.getY() + minYClamped + random.nextDouble((maxYClamped - minYClamped) + 1.0d) + 0.1d;
-        double z = origin.getZ() + minZClamped + random.nextDouble((maxZClamped - minZClamped) + 1.0d);
+        int maxXClamped = clamp(maxX, 0, arenaMaxX);
+        int maxYClamped = clamp(maxY, 0, arenaMaxY);
+        int maxZClamped = clamp(maxZ, 0, arenaMaxZ);
+
+        double x = origin.getX() + minXClamped + (maxXClamped > minXClamped ? random.nextDouble() * (maxXClamped - minXClamped) : 0.5);
+        double y = origin.getY() + minYClamped + (maxYClamped > minYClamped ? random.nextDouble() * (maxYClamped - minYClamped) : 0.0);
+        double z = origin.getZ() + minZClamped + (maxZClamped > minZClamped ? random.nextDouble() * (maxZClamped - minZClamped) : 0.5);
+
         return new Location(origin.getWorld(), x, y, z, yaw, pitch);
     }
 
-    private static int clamp(int value, int min, int max) {
+    private int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }
 }

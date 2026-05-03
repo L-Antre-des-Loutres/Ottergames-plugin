@@ -13,10 +13,12 @@ import java.util.Random;
 
 public interface Minigame {
     String getName();
-    void onStart(List<ArenaInstance> arenas);
-    void onEnd();
+    void onStart(List<ArenaInstance> arenas, org.antredesloutres.ottergames.managers.GameManager gameManager);
+    void onEnd(org.antredesloutres.ottergames.managers.GameManager gameManager);
     int getDurationSeconds();
     String getStructureName();
+    
+    default void onPlayerMove(org.bukkit.event.player.PlayerMoveEvent event, org.antredesloutres.ottergames.managers.GameManager gameManager) {}
 
     default int getInstanceCount() { return 1; }
     default int getInstanceCount(GameSelectionContext selectionContext) { return getInstanceCount(); }

@@ -5,8 +5,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.models.minigames.Hikabrain;
-import org.antredesloutres.ottergames.models.minigames.PlaceholderGame;
-import org.antredesloutres.ottergames.models.minigames.SoloGame;
 import org.antredesloutres.ottergames.models.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
@@ -100,7 +98,7 @@ public class GameManager {
 
     public void stopEverything() {
         if (!isPaused && currentGame != null) {
-            currentGame.onEnd();
+            currentGame.onEnd(this);
             arenaSlotManager.free(currentArenas);
             currentArenas = Collections.emptyList();
             plugin.getLogger().info("Minigame stopped: " + currentGame.getName() + ".");
@@ -200,13 +198,13 @@ public class GameManager {
         timer = currentGame.getDurationSeconds();
 
         teleportActiveParticipantsToArenas();
-        currentGame.onStart(currentArenas);
+        currentGame.onStart(currentArenas, this);
         plugin.getLogger().info("Minigame started: " + currentGame.getName() + " (" + timer + "s).");
     }
 
     private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
-        currentGame.onEnd();
+        currentGame.onEnd(this);
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
         playerSpawnLocations.clear();
@@ -327,6 +325,14 @@ public class GameManager {
 
     public ArenaInstance getPlayerArena(UUID playerId) {
         return playerArenaAssignments.get(playerId);
+    }
+
+    public Map<UUID, ArenaInstance> getPlayerArenaAssignments() {
+        return Collections.unmodifiableMap(playerArenaAssignments);
+    }
+
+    public Map<UUID, Location> getPlayerSpawnLocations() {
+        return Collections.unmodifiableMap(playerSpawnLocations);
     }
 
     public boolean eliminatePlayer(UUID playerId) {

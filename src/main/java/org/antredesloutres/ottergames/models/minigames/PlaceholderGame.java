@@ -33,15 +33,15 @@ public class PlaceholderGame implements Minigame {
     }
 
     @Override
-    public void onStart(List<ArenaInstance> arenas) {
+    public void onStart(List<ArenaInstance> arenas, org.antredesloutres.ottergames.managers.GameManager gameManager) {
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendMessage("§aTenez bon pendant 30 secondes !");
         }
     }
 
     @Override
-    public void onEnd() {
-        Bukkit.broadcastMessage("§6Temps écoulé ! Bien joué.");
+    public void onEnd(org.antredesloutres.ottergames.managers.GameManager gameManager) {
+        Bukkit.broadcastMessage("§e[OtterGames] Placeholder Game ended.");
     }
 
 }

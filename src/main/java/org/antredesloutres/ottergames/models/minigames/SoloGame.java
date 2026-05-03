@@ -31,14 +31,16 @@ public class SoloGame implements Minigame {
     }
 
     @Override
-    public void onStart(List<ArenaInstance> arenas) {
+    public void onStart(List<ArenaInstance> arenas, org.antredesloutres.ottergames.managers.GameManager gameManager) {
+        // Nothing special to do, GameManager already teleports players.
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendMessage("§aSolo Challenge ! Une arène par joueur.");
         }
     }
 
     @Override
-    public void onEnd() {
+    public void onEnd(org.antredesloutres.ottergames.managers.GameManager gameManager) {
+        Bukkit.broadcastMessage("§e[OtterGames] Solo Game ended.");
         Bukkit.broadcastMessage("§6Temps écoulé ! Bien joué.");
     }
 

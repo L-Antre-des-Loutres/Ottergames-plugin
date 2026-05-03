@@ -80,6 +80,9 @@ public class ArenaGameListener implements Listener {
                 }
             }
         }
+
+        // Pass movement to minigame for custom logic (e.g. goals)
+        currentGame.onPlayerMove(event, gameManager);
     }
 
     // ──────────────────────────────────────────────
