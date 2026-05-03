@@ -61,36 +61,6 @@ public final class SelectionConditions {
         return minRound(2);
     }
 
-    @Deprecated(forRemoval = false)
-    public static SelectionCondition oddActiveParticipants() {
-        return activeParticipantCountIsOdd();
-    }
-
-    @Deprecated(forRemoval = false)
-    public static SelectionCondition evenActiveParticipants() {
-        return activeParticipantCountIsEven();
-    }
-
-    @Deprecated(forRemoval = false)
-    public static SelectionCondition oddParticipants() {
-        return activeParticipantCountIsOdd();
-    }
-
-    @Deprecated(forRemoval = false)
-    public static SelectionCondition evenParticipants() {
-        return activeParticipantCountIsEven();
-    }
-
-    @Deprecated(forRemoval = false)
-    public static SelectionCondition minParticipants(int minParticipants) {
-        return minActiveParticipants(minParticipants);
-    }
-
-    @Deprecated(forRemoval = false)
-    public static SelectionCondition maxParticipants(int maxParticipants) {
-        return maxActiveParticipants(maxParticipants);
-    }
-
     private static void requireNonNegative(int value, String fieldName) {
         if (value < 0) {
             throw new IllegalArgumentException(fieldName + " must be >= 0");

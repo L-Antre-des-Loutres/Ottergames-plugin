@@ -1,6 +1,7 @@
 package org.antredesloutres.ottergames.handlers;
 
 import org.antredesloutres.ottergames.managers.GameManager;
+import org.antredesloutres.ottergames.listeners.ArenaGameListener;
 import org.antredesloutres.ottergames.listeners.JoinListener;
 import org.antredesloutres.ottergames.listeners.QuitListener;
 import org.bukkit.Bukkit;
@@ -23,6 +24,7 @@ public class ListenersHandler {
         // Registering
         pm.registerEvents(new JoinListener(gameManager, plugin), plugin);
         pm.registerEvents(new QuitListener(gameManager), plugin);
+        pm.registerEvents(new ArenaGameListener(gameManager, plugin), plugin);
     }
 
 }

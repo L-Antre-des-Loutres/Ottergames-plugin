@@ -1,6 +1,6 @@
 package org.antredesloutres.ottergames.models.minigames;
 
-import org.antredesloutres.ottergames.models.ArenaInstance;
+import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondition;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditions;
@@ -26,20 +26,21 @@ public class SoloGame implements Minigame {
 
     @Override
     public List<SelectionCondition> getSelectionConditions() {
-        return List.of(SelectionConditions.activeParticipantCountIsOdd(),
-                SelectionConditions.minSpectators(2));
+        return List.of(SelectionConditions.activeParticipantCountIsOdd());
 
     }
 
     @Override
-    public void onStart(List<ArenaInstance> arenas) {
+    public void onStart(List<ArenaInstance> arenas, org.antredesloutres.ottergames.managers.GameManager gameManager) {
+        // Nothing special to do, GameManager already teleports players.
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.sendMessage("§aSolo Challenge ! Une arène par joueur.");
         }
     }
 
     @Override
-    public void onEnd() {
+    public void onEnd(org.antredesloutres.ottergames.managers.GameManager gameManager) {
+        Bukkit.broadcastMessage("§e[OtterGames] Solo Game ended.");
         Bukkit.broadcastMessage("§6Temps écoulé ! Bien joué.");
     }
 

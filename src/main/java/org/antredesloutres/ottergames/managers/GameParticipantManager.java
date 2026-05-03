@@ -153,6 +153,19 @@ public class GameParticipantManager {
         return gamePlayer != null && gamePlayer.isSpectator();
     }
 
+    /**
+     * Eliminates a player by converting them to a spectator.
+     * @return true if the player was active and is now eliminated, false otherwise.
+     */
+    public boolean eliminatePlayer(UUID playerId) {
+        GamePlayer gamePlayer = participants.get(playerId);
+        if (gamePlayer == null || gamePlayer.isSpectator()) {
+            return false;
+        }
+        participants.put(playerId, new GamePlayer(playerId, gamePlayer.username(), true));
+        return true;
+    }
+
     public Set<UUID> getOptedOutPlayerIds() {
         return Set.copyOf(optedOutPlayers);
     }
