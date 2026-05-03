@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -103,6 +104,28 @@ public class ArenaGameListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerDamageByEntity(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player victim)) return;
+
+        Minigame currentGame = gameManager.getCurrentGame();
+        if (currentGame == null) return;
+
+        // If PvP is disabled, cancel any damage from another player
+        if (!currentGame.pvpEnabled()) {
+            Player damager = null;
+            if (event.getDamager() instanceof Player p) {
+                damager = p;
+            } else if (event.getDamager() instanceof org.bukkit.entity.Projectile projectile && projectile.getShooter() instanceof Player p) {
+                damager = p;
+            }
+
+            if (damager != null) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
     // ──────────────────────────────────────────────
     //  Death handling
     // ──────────────────────────────────────────────
@@ -183,12 +206,20 @@ public class ArenaGameListener implements Listener {
     }
 
     private void checkBlockModification(Player player, Location blockLocation, org.bukkit.event.Cancellable event) {
+        // High priority: Lobby is ALWAYS unbreakable if it exists
+        if (gameManager.isInLobby(blockLocation)) {
+            event.setCancelled(true);
+            return;
+        }
+
         Minigame currentGame = gameManager.getCurrentGame();
         if (currentGame == null) return;
 
-        // Check if player is an active participant in an arena
-        if (gameManager.getPlayerArena(player.getUniqueId()) == null) return;
+        // Find the arena at this location (for non-lobby arenas)
+        ArenaInstance arenaAtLocation = gameManager.getArenaAt(blockLocation);
+        if (arenaAtLocation == null) return;
 
+        // If the location is within an active arena, check if the current minigame allows modification.
         if (!currentGame.canModifyBlock(player, blockLocation, gameManager)) {
             event.setCancelled(true);
         }

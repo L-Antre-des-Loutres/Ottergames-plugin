@@ -55,6 +55,9 @@ public interface Minigame {
     /** If true, fall damage is disabled during the minigame. */
     default boolean disableFallDamage() { return false; }
 
+    /** If true, PvP (damage between players) is enabled. */
+    default boolean pvpEnabled() { return true; }
+
     // ──────────────────────────────────────────────
     //  Death rules
     // ──────────────────────────────────────────────
@@ -74,7 +77,6 @@ public interface Minigame {
      * Applies the starting inventory and equipment to a player.
      * Override this to give items, armor, effects, etc. at the start of the game.
      * Called once when the game starts and optionally on respawn / bounds exit.
-     * 
      * The default implementation does nothing (players keep whatever they had).
      *
      * @param player The player to equip.

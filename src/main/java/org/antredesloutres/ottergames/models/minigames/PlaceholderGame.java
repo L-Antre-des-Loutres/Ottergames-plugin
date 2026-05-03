@@ -1,9 +1,7 @@
 package org.antredesloutres.ottergames.models.minigames;
 
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
-import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondition;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditionMode;
-import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditions;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -16,7 +14,7 @@ public class PlaceholderGame implements Minigame {
     public String getName() { return "Survie Chronométrée"; }
 
     @Override
-    public int getDurationSeconds() { return 30; }
+    public int getDurationSeconds() { return 10; }
 
     @Override
     public String getStructureName() { return "house"; }
@@ -25,17 +23,9 @@ public class PlaceholderGame implements Minigame {
     public SelectionConditionMode getSelectionConditionMode() { return SelectionConditionMode.ANY; }
 
     @Override
-    public List<SelectionCondition> getSelectionConditions() {
-        return List.of(
-                SelectionConditions.notFirstRound(),
-                SelectionConditions.minSpectators(2)
-        );
-    }
-
-    @Override
     public void onStart(List<ArenaInstance> arenas, org.antredesloutres.ottergames.managers.GameManager gameManager) {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            p.sendMessage("§aTenez bon pendant 30 secondes !");
+            p.sendMessage("§aTenez bon pendant 10 secondes !");
         }
     }
 
