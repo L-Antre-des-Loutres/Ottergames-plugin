@@ -9,10 +9,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -23,14 +21,11 @@ import java.util.Random;
 /**
  * Spleef is a classic minigame where players try to make their opponents fall
  * by breaking the blocks (usually snow) under their feet.
- * 
  * Goal:
  * Be the last player standing on the platform.
- *
  * Gameplay:
  * Players are equipped with an efficient shovel. Fall damage is disabled.
  * PvP is disabled.
- * 
  * Elimination:
  * Players are eliminated if they fall below the platform (bounds exit).
  */
@@ -79,9 +74,9 @@ public class Spleef implements Minigame {
         ItemStack shovel = new ItemStack(Material.DIAMOND_SHOVEL);
         player.getInventory().setItem(0, shovel);
 
-        // Apply Slow Falling effect for the "snow fall" feel (200 ticks = 10 seconds)
+        // Apply Slow Falling effect for the "snow fall" feel (100 ticks = 5 seconds)
         // This allows players to drift and choose where they land.
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 150, 0, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 100, 0, false, false));
         
         // Spawn snowflake particles around the player at the start
         player.spawnParticle(Particle.SNOWFLAKE, player.getLocation(), 50, 1.0, 1.0, 1.0, 0.05);
