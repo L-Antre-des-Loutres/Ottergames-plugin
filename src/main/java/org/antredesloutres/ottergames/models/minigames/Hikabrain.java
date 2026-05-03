@@ -154,28 +154,51 @@ public class Hikabrain implements Minigame {
     @Override
     public void applyStartingInventory(Player player) {
         player.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
-        player.getInventory().setItem(1, new ItemStack(Material.STONE_PICKAXE));
+        player.getInventory().setItem(1, new ItemStack(Material.IRON_PICKAXE));
         player.getInventory().setItem(2, new ItemStack(Material.SANDSTONE, 64));
         player.getInventory().setItem(3, new ItemStack(Material.GOLDEN_APPLE, 8));
         player.getInventory().setItemInOffHand(new ItemStack(Material.SANDSTONE, 64));
-
-        player.getInventory().setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
-        player.getInventory().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
-        player.getInventory().setBoots(new ItemStack(Material.IRON_BOOTS));
+        player.getInventory().setItem(4, new ItemStack(Material.SANDSTONE, 64));
+        player.getInventory().setItem(5, new ItemStack(Material.SANDSTONE, 64));
+        player.getInventory().setItem(6, new ItemStack(Material.SANDSTONE, 64));
+        player.getInventory().setItem(7, new ItemStack(Material.SANDSTONE, 64));
+        player.getInventory().setItem(8, new ItemStack(Material.SANDSTONE, 64));
+        player.getInventory().setItem(9, new ItemStack(Material.SANDSTONE, 64));
 
         ItemStack helmet = new ItemStack(Material.LEATHER_HELMET);
-        LeatherArmorMeta meta = (LeatherArmorMeta) helmet.getItemMeta();
-        if (meta != null) {
-            String team = playerTeams.get(player.getUniqueId());
-            if (TEAM_1.equals(team)) {
-                meta.setColor(Color.RED);
-            } else if (TEAM_2.equals(team)) {
-                meta.setColor(Color.BLUE);
-            }
-            helmet.setItemMeta(meta);
+        ItemStack chestplate = new ItemStack(Material.LEATHER_CHESTPLATE);
+        ItemStack leggings = new ItemStack(Material.LEATHER_LEGGINGS);
+        ItemStack boots = new ItemStack(Material.LEATHER_BOOTS);
+
+        String team = playerTeams.get(player.getUniqueId());
+        Color teamColor = null;
+        if (TEAM_1.equals(team)) {
+            teamColor = Color.RED;
+        } else if (TEAM_2.equals(team)) {
+            teamColor = Color.BLUE;
         }
+
+        if (teamColor != null) {
+            applyColor(helmet, teamColor);
+            applyColor(chestplate, teamColor);
+            applyColor(leggings, teamColor);
+            applyColor(boots, teamColor);
+        }
+
         player.getInventory().setHelmet(helmet);
+        player.getInventory().setChestplate(chestplate);
+        player.getInventory().setLeggings(leggings);
+        player.getInventory().setBoots(boots);
+
         player.updateInventory();
+    }
+
+    private void applyColor(ItemStack item, Color color) {
+        LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
+        if (meta != null) {
+            meta.setColor(color);
+            item.setItemMeta(meta);
+        }
     }
 
     @Override

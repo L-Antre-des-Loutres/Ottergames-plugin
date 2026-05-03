@@ -200,6 +200,14 @@ public class GameManager {
         teleportActiveParticipantsToArenas();
         currentGame.onStart(currentArenas, this);
 
+        // Apply starting inventories after onStart (allows minigames to initialize teams/data first)
+        for (UUID playerId : playerArenaAssignments.keySet()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline()) {
+                currentGame.applyStartingInventory(player);
+            }
+        }
+
         // Register minigame events if it implements Listener
         if (currentGame instanceof org.bukkit.event.Listener listener) {
             Bukkit.getPluginManager().registerEvents(listener, plugin);
@@ -288,7 +296,6 @@ public class GameManager {
                 player.teleport(spawnLocation);
                 
                 clearPlayerInventory(player);
-                currentGame.applyStartingInventory(player);
             }
         }
     }
