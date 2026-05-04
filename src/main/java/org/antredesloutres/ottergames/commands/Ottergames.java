@@ -1,7 +1,10 @@
 package org.antredesloutres.ottergames.commands;
 
+import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.managers.GameManager.LeaveResult;
+import org.antredesloutres.ottergames.models.minigames.Minigame;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -17,13 +20,16 @@ import static org.antredesloutres.ottergames.utils.Constants.*;
 
 public class Ottergames implements TabExecutor {
 
+    private final Main plugin;
     private final GameManager gameManager;
 
     /**
      * Constructor for the Ottergames command handler.
+     * @param plugin The Main plugin instance.
      * @param gameManager The GameManager instance used to manage game state and player participation.
      */
-    public Ottergames(GameManager gameManager) {
+    public Ottergames(Main plugin, GameManager gameManager) {
+        this.plugin = plugin;
         this.gameManager = gameManager;
     }
 
@@ -74,10 +80,63 @@ public class Ottergames implements TabExecutor {
                     default                -> OTTERGAMES_LEFT;
                 });
             }
+            case "config" -> handleConfig(sender, args);
             default -> sender.sendMessage(OTTERGAMES_UNKNOWN_COMMAND);
         }
 
         return true;
+    }
+
+    private void handleConfig(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("ottergames.admin")) {
+            sender.sendMessage("§cYou don't have permission to use this command.");
+            return;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(Constants.CONFIG_USAGE);
+            return;
+        }
+
+        String sub = args[1].toLowerCase(Locale.ROOT);
+        GameManager gm = gameManager;
+
+        switch (sub) {
+            case "list" -> {
+                sender.sendMessage(Constants.CONFIG_LIST_HEADER);
+                for (Minigame game : gm.getGames()) {
+                    String status = gm.getConfigManager().getGameConfig().isGameEnabled(game.getName()) 
+                            ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
+                    sender.sendMessage(String.format(Constants.CONFIG_GAME_ENTRY, game.getName(), status));
+                }
+            }
+            case "enable", "disable" -> {
+                if (args.length < 3) {
+                    sender.sendMessage("§cUsage: /ottergames config " + sub + " <game_name>");
+                    return;
+                }
+                String gameName = args[2];
+                Minigame target = null;
+                for (Minigame g : gm.getGames()) {
+                    if (g.getName().equalsIgnoreCase(gameName)) {
+                        target = g;
+                        break;
+                    }
+                }
+
+                if (target == null) {
+                    sender.sendMessage(String.format(Constants.CONFIG_GAME_NOT_FOUND, gameName));
+                    return;
+                }
+
+                boolean enable = sub.equals("enable");
+                gm.getConfigManager().getGameConfig().setGameEnabled(target.getName(), enable);
+                gm.getConfigManager().save();
+                String statusLabel = enable ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
+                sender.sendMessage(String.format(Constants.CONFIG_GAME_SET, target.getName(), statusLabel));
+            }
+            default -> sender.sendMessage(Constants.CONFIG_USAGE);
+        }
     }
 
     /**
@@ -92,7 +151,13 @@ public class Ottergames implements TabExecutor {
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, @NonNull String @NonNull [] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of(OTTERGAMES_ARGS_START, OTTERGAMES_ARGS_STOP, OTTERGAMES_ARGS_LEAVE), completions);
+            StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of(OTTERGAMES_ARGS_START, OTTERGAMES_ARGS_STOP, OTTERGAMES_ARGS_LEAVE, "config"), completions);
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("config")) {
+            StringUtil.copyPartialMatches(args[1].toLowerCase(Locale.ROOT), List.of("list", "enable", "disable"), completions);
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("config") && (args[1].equalsIgnoreCase("enable") || args[1].equalsIgnoreCase("disable"))) {
+            List<String> gameNames = new ArrayList<>();
+            for (Minigame g : gameManager.getGames()) gameNames.add(g.getName());
+            StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), gameNames, completions);
         }
         return completions;
     }

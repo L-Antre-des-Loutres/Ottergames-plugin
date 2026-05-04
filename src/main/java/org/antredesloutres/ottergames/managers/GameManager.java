@@ -40,6 +40,7 @@ public class GameManager {
     private final Random random = new Random();
     private final Main plugin;
     private final ArenaSlotManager arenaSlotManager;
+    private final ConfigManager configManager;
 
     private final Lobby lobbyGame;
     private List<ArenaInstance> lobbyArenas = Collections.emptyList();
@@ -60,6 +61,7 @@ public class GameManager {
     public GameManager(Main plugin) {
         this.plugin = plugin;
         this.arenaSlotManager = new ArenaSlotManager(plugin);
+        this.configManager = new ConfigManager(plugin);
         this.participantManager = new GameParticipantManager();
         this.lobbyGame = new Lobby(plugin);
 
@@ -67,6 +69,14 @@ public class GameManager {
         this.games.add(new Dropper());
         this.games.add(new Spleef(plugin));
         this.games.add(new Hikabrain(plugin));
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public List<Minigame> getGames() {
+        return Collections.unmodifiableList(games);
     }
 
     public boolean startGameLoop() {
@@ -390,7 +400,7 @@ public class GameManager {
     private List<Minigame> getSelectableGames(GameSelectionContext selectionContext) {
         List<Minigame> selectableGames = new ArrayList<>();
         for (Minigame game : games) {
-            if (game.canBeSelected(selectionContext)) {
+            if (configManager.getGameConfig().isGameEnabled(game.getName()) && game.canBeSelected(selectionContext)) {
                 selectableGames.add(game);
             }
         }
