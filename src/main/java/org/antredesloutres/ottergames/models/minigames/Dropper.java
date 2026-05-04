@@ -61,7 +61,7 @@ public class Dropper implements Minigame {
     }
 
     @Override
-    public void applyStartingInventory(Player player) {
+    public void onGamePlayerSpawn(Player player) {
         player.setGameMode(GameMode.ADVENTURE);
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, -1, 0, false, false, false));
         player.sendMessage(Constants.DROPPER_SURVIVE_MESSAGE);
@@ -85,11 +85,13 @@ public class Dropper implements Minigame {
             Player bukkitPlayer = Bukkit.getPlayer(gp.getUuid());
             String name = bukkitPlayer != null ? bukkitPlayer.getName() : gp.getUuid().toString();
 
-            if (finishedPlayers.contains(gp.getUuid())) {
-                winnerNames.add(name);
-            } else {
-                loserNames.add(name);
-                gameManager.eliminatePlayer(gp.getUuid());
+            if (!gp.isSpectator()) {
+                if (finishedPlayers.contains(gp.getUuid())) {
+                    winnerNames.add(name);
+                } else {
+                    loserNames.add(name);
+                    gameManager.eliminatePlayer(gp.getUuid());
+                }
             }
 
             if (bukkitPlayer != null) {
@@ -119,6 +121,7 @@ public class Dropper implements Minigame {
         UUID playerId = player.getUniqueId();
 
         if (finishedPlayers.contains(playerId)) return;
+        if (gameManager.isPlayerSpectator(playerId)) return;
 
         ArenaInstance arena = gameManager.getPlayerArena(playerId);
         if (arena == null) return;
