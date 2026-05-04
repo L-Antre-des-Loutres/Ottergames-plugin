@@ -28,7 +28,6 @@ public final class Constants {
     public static final String GAME_MANAGER_BREAK_TIME        = "Break time! Next game starts in %d seconds.";
     public static final String GAME_MANAGER_STARTING_GAME     = "Starting %s in...";
     public static final String GAME_MANAGER_STARTING_OTTER    = "OtterGames starts in...";
-    public static final String GAME_MANAGER_REJOINED          = "§aYou have been re-enrolled for the next Ottergames.";
     public static final String GAME_MANAGER_NO_GAME_AVAILABLE = "§cNo minigame compatible with the current situation. Game stopped.";
     public static final String GAME_MANAGER_NEXT_GAME         = "§6Next game: §e%s";
     public static final String LOGGER_NO_GAME_PRESELECTED     = "No minigame was pre-selected. Stopping game loop.";
@@ -43,8 +42,6 @@ public final class Constants {
     // ──────────────────────────────────────────────
     //  Join listener
     // ──────────────────────────────────────────────
-    public static final String JOIN_OPTED_OUT_PREFIX        = "You are opted out of Ottergames: ";
-    public static final String JOIN_OPTED_OUT_SUFFIX        = "spectator mode.";
     public static final String JOIN_DISCONNECTED_PREFIX     = "You became a spectator because ";
     public static final String JOIN_DISCONNECTED_SUFFIX     = "you disconnected during the game.";
     public static final String JOIN_GAME_IN_PROGRESS_PREFIX = "Game in progress: ";

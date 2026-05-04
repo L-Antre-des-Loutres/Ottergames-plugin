@@ -190,6 +190,8 @@ public class Hikabrain implements Minigame {
 
     @Override
     public void applyStartingInventory(Player player) {
+        player.setGameMode(org.bukkit.GameMode.SURVIVAL);
+
         player.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
         player.getInventory().setItem(1, new ItemStack(Material.IRON_PICKAXE));
         player.getInventory().setItem(2, new ItemStack(Material.SANDSTONE, 64));

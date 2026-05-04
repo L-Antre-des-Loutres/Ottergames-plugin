@@ -154,13 +154,6 @@ public class GameManager {
             this.loopTask = null;
         }
 
-        for (UUID playerId : participantManager.getOptedOutPlayerIds()) {
-            Player player = Bukkit.getPlayer(playerId);
-            if (player != null && player.isOnline()) {
-                player.sendMessage(Constants.GAME_MANAGER_REJOINED);
-            }
-        }
-
         this.currentGame = null;
         this.isPaused = true;
         this.timer = 0;
@@ -342,12 +335,13 @@ public class GameManager {
             playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
             playerArenaAssignments.put(player.getUniqueId(), lobby);
             player.teleport(spawn);
-            resetPlayerForLobby(player);
+            boolean isSpectator = participantManager.isPlayerSpectator(player.getUniqueId());
+            resetForLobby(player, isSpectator ? GameMode.SPECTATOR : GameMode.ADVENTURE);
             lobbyGame.applyStartingInventory(player);
         }
     }
 
-    private void resetPlayerForLobby(Player player) {
+    private void resetForLobby(Player player, GameMode gameMode) {
         // Reset GENERIC_MAX_HEALTH to its vanilla default (e.g. Dropper sets it to 1)
         var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHealth != null) {
@@ -361,7 +355,7 @@ public class GameManager {
             }
         }
 
-        player.setGameMode(GameMode.ADVENTURE);
+        player.setGameMode(gameMode);
         player.setInvulnerable(false);
         player.setAbsorptionAmount(0);
         healPlayer(player);
@@ -441,10 +435,6 @@ public class GameManager {
                 healPlayer(player);
             }
         }
-    }
-
-    public boolean isPlayerOptedOut(UUID playerId) {
-        return participantManager.isPlayerOptedOut(playerId);
     }
 
     public boolean isPlayerDisconnectedDuringGame(UUID playerId) {

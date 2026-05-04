@@ -17,55 +17,41 @@ import java.util.UUID;
 public class GameParticipantManager {
 
     private final Map<UUID, GamePlayer> participants = new HashMap<>();
-    private final Set<UUID> optedOutPlayers = new HashSet<>();
     private final Set<UUID> disconnectedDuringGamePlayers = new HashSet<>();
     private final Random random = new Random();
 
+    /**
+     * Called when a player connects. Every connected player is a participant.
+     * - If the player was already tracked as a spectator (eliminated or opted out), they stay spectator.
+     * - If the game is running and they were not tracked, they join as spectator.
+     * - Otherwise they join as an active participant.
+     */
     public boolean handlePlayerJoin(Player player, boolean gameRunning) {
         UUID playerId = player.getUniqueId();
-        if (optedOutPlayers.contains(playerId)) {
-            participants.remove(playerId);
-            return gameRunning;
-        }
-
-        if (disconnectedDuringGamePlayers.contains(playerId) && gameRunning) {
-            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            return true;
-        }
-
-        if (gameRunning) {
-            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            return true;
-        }
-
-        participants.put(playerId, new GamePlayer(playerId, player.getName(), false));
-        return false;
+        GamePlayer existing = participants.get(playerId);
+        boolean isSpectator = (existing != null && existing.isSpectator()) || gameRunning;
+        participants.put(playerId, new GamePlayer(playerId, player.getName(), isSpectator));
+        return isSpectator;
     }
 
+    /**
+     * Called when a player uses /leave. Opted-out = spectator, same state as eliminated.
+     * The player stays in participants.
+     */
     public LeaveResult handlePlayerLeave(Player player, boolean gameRunning) {
         UUID playerId = player.getUniqueId();
-        if (optedOutPlayers.contains(playerId)) {
+        GamePlayer existing = participants.get(playerId);
+        if (existing != null && existing.isSpectator()) {
             return LeaveResult.ALREADY_LEFT;
         }
-
-        optedOutPlayers.add(playerId);
+        participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
         disconnectedDuringGamePlayers.remove(playerId);
-        if (gameRunning) {
-            participants.put(playerId, new GamePlayer(playerId, player.getName(), true));
-            return LeaveResult.LEFT_AND_SPECTATING;
-        }
-
-        participants.remove(playerId);
-        return LeaveResult.LEFT;
+        return gameRunning ? LeaveResult.LEFT_AND_SPECTATING : LeaveResult.LEFT;
     }
 
     public void handlePlayerQuit(Player player, boolean gameRunning) {
         UUID playerId = player.getUniqueId();
         GamePlayer existingGamePlayer = participants.get(playerId);
-        if (optedOutPlayers.contains(playerId)) {
-            participants.remove(playerId);
-            return;
-        }
 
         if (!gameRunning) {
             participants.remove(playerId);
@@ -85,14 +71,16 @@ public class GameParticipantManager {
         participants.put(playerId, new GamePlayer(playerId, existingGamePlayer.username(), true));
     }
 
+    /**
+     * Registers all online players as active participants (no exclusions).
+     * Called at the start of a new game — every connected player starts active.
+     */
     public void registerOnlinePlayersAsParticipants() {
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            UUID playerId = onlinePlayer.getUniqueId();
-            if (optedOutPlayers.contains(playerId)) {
-                continue;
-            }
-
-            participants.put(playerId, new GamePlayer(playerId, onlinePlayer.getName(), false));
+            participants.put(
+                onlinePlayer.getUniqueId(),
+                new GamePlayer(onlinePlayer.getUniqueId(), onlinePlayer.getName(), false)
+            );
         }
     }
 
@@ -102,7 +90,6 @@ public class GameParticipantManager {
 
     public void clearAll() {
         participants.clear();
-        optedOutPlayers.clear();
         disconnectedDuringGamePlayers.clear();
     }
 
@@ -140,10 +127,6 @@ public class GameParticipantManager {
         return getSpectatorParticipants().size();
     }
 
-    public boolean isPlayerOptedOut(UUID playerId) {
-        return optedOutPlayers.contains(playerId);
-    }
-
     public boolean isPlayerDisconnectedDuringGame(UUID playerId) {
         return disconnectedDuringGamePlayers.contains(playerId);
     }
@@ -164,10 +147,6 @@ public class GameParticipantManager {
         }
         participants.put(playerId, new GamePlayer(playerId, gamePlayer.username(), true));
         return true;
-    }
-
-    public Set<UUID> getOptedOutPlayerIds() {
-        return Set.copyOf(optedOutPlayers);
     }
 
     public List<List<GamePlayer>> createActiveGroups(int groupSize) {

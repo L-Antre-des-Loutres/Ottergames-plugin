@@ -22,15 +22,11 @@ public class JoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         boolean spectator = gameManager.handlePlayerJoin(event.getPlayer());
-        boolean optedOut = gameManager.isPlayerOptedOut(event.getPlayer().getUniqueId());
         boolean disconnectedDuringGame = gameManager.isPlayerDisconnectedDuringGame(event.getPlayer().getUniqueId());
         Component statusMessage;
 
         if (spectator) {
-            if (optedOut) {
-                statusMessage = Component.text(Constants.JOIN_OPTED_OUT_PREFIX, NamedTextColor.RED)
-                        .append(Component.text(Constants.JOIN_OPTED_OUT_SUFFIX, NamedTextColor.GRAY));
-            } else if (disconnectedDuringGame) {
+            if (disconnectedDuringGame) {
                 statusMessage = Component.text(Constants.JOIN_DISCONNECTED_PREFIX, NamedTextColor.RED)
                         .append(Component.text(Constants.JOIN_DISCONNECTED_SUFFIX, NamedTextColor.GRAY));
             } else {
