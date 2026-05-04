@@ -131,6 +131,12 @@ public class Hikabrain implements Minigame {
     }
 
     @Override
+    public Location getRespawnLocation(UUID playerId, ArenaInstance arena, Random random) {
+        String team = playerTeams.getOrDefault(playerId, TEAM_1);
+        return structure.spawnZone(team).randomLocation(arena, random);
+    }
+
+    @Override
     public boolean canModifyBlock(Player player, Location blockLocation, GameManager gameManager) {
         ArenaInstance arena = gameManager.getPlayerArena(player.getUniqueId());
         if (arena == null) return true;
