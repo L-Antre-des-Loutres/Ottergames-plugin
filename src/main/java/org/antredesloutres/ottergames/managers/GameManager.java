@@ -59,8 +59,6 @@ public class GameManager {
         this.lobbyGame = new Lobby(plugin);
 
         // Add games
-        // this.games.add(new PlaceholderGame());
-        // this.games.add(new SoloGame());
         this.games.add(new Dropper());
         this.games.add(new Spleef(plugin));
         this.games.add(new Hikabrain(plugin));
