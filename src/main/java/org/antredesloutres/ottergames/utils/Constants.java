@@ -21,6 +21,23 @@ public final class Constants {
     public static final String GAME_MANAGER_NO_GAME_RUNNING  = "No game is currently running.";
     public static final String GAME_MANAGER_STARTED          = "Game is started";
     public static final String GAME_MANAGER_STOPPED          = "Game is stopped";
+    public static final String GAME_MANAGER_BREAK_TIME       = "Break time! Next game starts in %d seconds.";
+    public static final String GAME_MANAGER_STARTING_GAME    = "Starting %s in...";
+    public static final String GAME_MANAGER_STARTING_OTTER   = "OtterGames starts in...";
+    public static final String GAME_MANAGER_WINNER_ANNOUNCE  = "§6 %s has won the %s game!";
+
+    // ──────────────────────────────────────────────
+    //  Minigames - Hikabrain
+    // ──────────────────────────────────────────────
+    public static final String HIKABRAIN_JOIN_TEAM_RED       = "§aYou are on the §cRed Team §a!";
+    public static final String HIKABRAIN_JOIN_TEAM_BLUE      = "§aYou are on the §9Blue Team §a!";
+    public static final String HIKABRAIN_PROTECTED_ZONE      = "§c✗ You cannot modify this zone!";
+    public static final String HIKABRAIN_PROTECTED_OBSIDIAN  = "§c✗ You cannot break obsidian!";
+    public static final String HIKABRAIN_POINT_SCORED        = "§6%s (%s) scored a point! Score: Red §c%d §f- §9%d §6Blue";
+    public static final String HIKABRAIN_GAME_END_SCORE      = "§eFinal Score: Red §c%d §f- §9%d §eBlue";
+    public static final String HIKABRAIN_WINNER_RED          = "§c Red Team §a (%s) won!";
+    public static final String HIKABRAIN_WINNER_BLUE         = "§9 Blue Team §a (%s) won!";
+    public static final String HIKABRAIN_DRAW                = "§7 It's a draw!";
 
     // ──────────────────────────────────────────────
     //  Participant

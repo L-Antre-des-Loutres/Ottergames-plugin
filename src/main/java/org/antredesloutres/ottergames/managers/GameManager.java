@@ -8,6 +8,8 @@ import org.antredesloutres.ottergames.models.minigames.*;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
+import org.antredesloutres.ottergames.utils.Constants;
+import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -43,6 +45,7 @@ public class GameManager {
     private final Map<UUID, Location> playerSpawnLocations = new HashMap<>();
     private final Map<UUID, ArenaInstance> playerArenaAssignments = new HashMap<>();
     private int timer;
+    private int maxTimer;
     private int startCountdownSecondsRemaining;
     private int currentRound;
     private boolean isPaused = true;
@@ -58,8 +61,9 @@ public class GameManager {
         // Add games
         // this.games.add(new PlaceholderGame());
         // this.games.add(new SoloGame());
-        //this.games.add(new Hikabrain(plugin));
         this.games.add(new Dropper());
+        this.games.add(new Spleef(plugin));
+        this.games.add(new Hikabrain(plugin));
     }
 
     public boolean startGameLoop() {
@@ -88,6 +92,7 @@ public class GameManager {
         this.running = true;
         this.isPaused = true;
         this.timer = 0;
+        this.maxTimer = 0;
         this.startCountdownSecondsRemaining = INITIAL_COUNTDOWN_SECONDS;
         this.currentRound = 0;
         this.currentGame = lobbyGame;
@@ -120,6 +125,7 @@ public class GameManager {
         }
 
         clearAllParticipantsInventories();
+        clearAllParticipantsXp();
 
         // Teleport everyone to world spawn
         for (GamePlayer gamePlayer : participantManager.getParticipants()) {
@@ -147,6 +153,7 @@ public class GameManager {
         this.currentGame = null;
         this.isPaused = true;
         this.timer = 0;
+        this.maxTimer = 0;
         this.startCountdownSecondsRemaining = 0;
         this.currentRound = 0;
         this.running = false;
@@ -165,11 +172,17 @@ public class GameManager {
     }
 
     public LeaveResult handlePlayerLeave(Player player) {
-        return switch (participantManager.handlePlayerLeave(player, running)) {
+        LeaveResult result = switch (participantManager.handlePlayerLeave(player, running)) {
             case ALREADY_LEFT -> LeaveResult.ALREADY_LEFT;
             case LEFT_AND_SPECTATING -> LeaveResult.LEFT_AND_SPECTATING;
             case LEFT -> LeaveResult.LEFT;
         };
+
+        if (result == LeaveResult.LEFT) {
+            clearPlayerXp(player);
+        }
+
+        return result;
     }
 
     public void handlePlayerQuit(Player player) {
@@ -181,20 +194,47 @@ public class GameManager {
 
         if (startCountdownSecondsRemaining > 0) {
             showStartCountdown(startCountdownSecondsRemaining);
+            updateXpBar(startCountdownSecondsRemaining, INITIAL_COUNTDOWN_SECONDS);
             startCountdownSecondsRemaining--;
             return;
         }
 
         if (timer > 0) {
+            updateXpBar(timer, maxTimer);
             timer--;
-            return;
-        }
-
-        if (isPaused) {
-            startNextMinigame();
         } else {
-            stopCurrentMinigame();
+            if (isPaused) {
+                startNextMinigame();
+            } else {
+                stopCurrentMinigame();
+            }
+            updateXpBar(timer, maxTimer);
         }
+    }
+
+    private void updateXpBar(int current, int max) {
+        float progress = (max > 0) ? (float) current / max : 0f;
+        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                player.setLevel(current);
+                player.setExp(Math.min(1.0f, Math.max(0.0f, progress)));
+            }
+        }
+    }
+
+    private void clearAllParticipantsXp() {
+        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                clearPlayerXp(player);
+            }
+        }
+    }
+
+    private void clearPlayerXp(Player player) {
+        player.setLevel(0);
+        player.setExp(0f);
     }
 
     private void startNextMinigame() {
@@ -219,6 +259,7 @@ public class GameManager {
         currentRound = selectionContext.roundNumber();
         isPaused = false;
         timer = currentGame.getDurationSeconds();
+        maxTimer = timer;
 
         teleportActiveParticipantsToArenas();
         currentGame.onStart(currentArenas, this);
@@ -241,6 +282,7 @@ public class GameManager {
 
     private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
+
         currentGame.onEnd(this);
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
@@ -254,14 +296,15 @@ public class GameManager {
         isPaused = true;
         currentGame = lobbyGame;
         timer = BREAK_TIME_SECONDS;
-        Bukkit.broadcastMessage("Break time! Next game starts in " + timer + " seconds.");
+        maxTimer = timer;
+        Bukkit.broadcastMessage(String.format(Constants.GAME_MANAGER_BREAK_TIME, timer));
 
         teleportToLobby();
     }
 
     private void teleportToLobby() {
         if (lobbyArenas.isEmpty()) return;
-        ArenaInstance lobby = lobbyArenas.get(0);
+        ArenaInstance lobby = lobbyArenas.getFirst();
 
         List<GamePlayer> players = participantManager.getParticipants();
         for (int i = 0; i < players.size(); i++) {
@@ -287,9 +330,9 @@ public class GameManager {
     }
 
     private void showStartCountdown(int secondsRemaining) {
-        String subtitleMessage = (currentGame != null)
-                ? "Starting " + currentGame.getName() + " in..."
-                : "OtterGames starts in...";
+        String subtitleMessage = (currentGame != null && currentGame != lobbyGame)
+                ? String.format(Constants.GAME_MANAGER_STARTING_GAME, currentGame.getName())
+                : Constants.GAME_MANAGER_STARTING_OTTER;
 
         var title = Title.title(
                 Component.text(String.valueOf(secondsRemaining), NamedTextColor.GOLD),
@@ -449,16 +492,13 @@ public class GameManager {
         for (GamePlayer gamePlayer : participantManager.getParticipants()) {
             Player player = Bukkit.getPlayer(gamePlayer.getUuid());
             if (player != null && player.isOnline()) {
-                clearPlayerInventory(player);
+                PlayerUtils.clearInventory(player);
             }
         }
     }
 
-    private void clearPlayerInventory(Player player) {
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
-        player.getInventory().setItemInOffHand(null);
-        player.updateInventory();
+    public void clearPlayerInventory(Player player) {
+        PlayerUtils.clearInventory(player);
     }
 
     public enum LeaveResult {

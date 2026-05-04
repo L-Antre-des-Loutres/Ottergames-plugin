@@ -16,7 +16,7 @@ public class SoloGame implements Minigame {
     public String getName() { return "Solo arena"; }
 
     @Override
-    public int getDurationSeconds() { return 30; }
+    public int getDurationSeconds() { return 15; }
 
     @Override
     public String getStructureName() { return "pvp_arena"; }
@@ -26,7 +26,7 @@ public class SoloGame implements Minigame {
 
     @Override
     public List<SelectionCondition> getSelectionConditions() {
-        return List.of(SelectionConditions.activeParticipantCountIsOdd());
+        return List.of(SelectionConditions.minActiveParticipants(1));
 
     }
 

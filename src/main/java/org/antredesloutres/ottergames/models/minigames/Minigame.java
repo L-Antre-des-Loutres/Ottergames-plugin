@@ -46,6 +46,20 @@ public interface Minigame {
         return true;
     }
 
+    /**
+     * Handles block interaction (right-click, physical).
+     * @param event The interaction event.
+     * @param gameManager The current game manager.
+     */
+    default void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent event, org.antredesloutres.ottergames.managers.GameManager gameManager) {}
+
+    /**
+     * Handles entity interaction.
+     * @param event The interaction event.
+     * @param gameManager The current game manager.
+     */
+    default void onPlayerInteractEntity(org.bukkit.event.player.PlayerInteractEntityEvent event, org.antredesloutres.ottergames.managers.GameManager gameManager) {}
+
     // ──────────────────────────────────────────────
     //  Arena rules
     // ──────────────────────────────────────────────
