@@ -11,6 +11,8 @@ import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.minigames.Minigame;
 import org.antredesloutres.ottergames.models.minigames.selection.GameSelectionContext;
 import org.antredesloutres.ottergames.models.participant.GamePlayer;
+import org.antredesloutres.ottergames.utils.Constants;
+import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -244,6 +246,7 @@ public class GameManager {
 
     private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
+
         currentGame.onEnd(this);
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
@@ -257,14 +260,14 @@ public class GameManager {
         isPaused = true;
         currentGame = lobbyGame;
         timer = BREAK_TIME_SECONDS;
-        Bukkit.broadcastMessage("Break time! Next game starts in " + timer + " seconds.");
+        Bukkit.broadcastMessage(String.format(Constants.GAME_MANAGER_BREAK_TIME, timer));
 
         teleportToLobby();
     }
 
     private void teleportToLobby() {
         if (lobbyArenas.isEmpty()) return;
-        ArenaInstance lobby = lobbyArenas.get(0);
+        ArenaInstance lobby = lobbyArenas.getFirst();
 
         List<GamePlayer> players = participantManager.getParticipants();
         for (int i = 0; i < players.size(); i++) {
@@ -290,9 +293,9 @@ public class GameManager {
     }
 
     private void showStartCountdown(int secondsRemaining) {
-        String subtitleMessage = (currentGame != null)
-                ? "Starting " + currentGame.getName() + " in..."
-                : "OtterGames starts in...";
+        String subtitleMessage = (currentGame != null && currentGame != lobbyGame)
+                ? String.format(Constants.GAME_MANAGER_STARTING_GAME, currentGame.getName())
+                : Constants.GAME_MANAGER_STARTING_OTTER;
 
         var title = Title.title(
                 Component.text(String.valueOf(secondsRemaining), NamedTextColor.GOLD),
@@ -442,16 +445,13 @@ public class GameManager {
         for (GamePlayer gamePlayer : participantManager.getParticipants()) {
             Player player = Bukkit.getPlayer(gamePlayer.getUuid());
             if (player != null && player.isOnline()) {
-                clearPlayerInventory(player);
+                PlayerUtils.clearInventory(player);
             }
         }
     }
 
-    private void clearPlayerInventory(Player player) {
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
-        player.getInventory().setItemInOffHand(null);
-        player.updateInventory();
+    public void clearPlayerInventory(Player player) {
+        PlayerUtils.clearInventory(player);
     }
 
     public enum LeaveResult {

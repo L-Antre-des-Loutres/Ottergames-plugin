@@ -1,5 +1,4 @@
 package org.antredesloutres.ottergames.models.minigames;
-
 import org.antredesloutres.ottergames.Main;
 import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
@@ -7,6 +6,7 @@ import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
 import org.antredesloutres.ottergames.models.arena.MinigameArena;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondition;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditions;
+import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -39,7 +39,7 @@ import java.util.UUID;
  */
 public class Spleef implements Minigame {
 
-    private static final int SNOW_BLOCKS_FOR_WIND_CHARGE = 20;
+    private static final int SNOW_BLOCKS_FOR_WIND_CHARGE = 4;
     private static final int WIND_CHARGE_AMOUNT = 1;
 
     private final MinigameArena structure;
@@ -89,7 +89,7 @@ public class Spleef implements Minigame {
     @Override
     public void applyStartingInventory(Player player) {
         // Clear inventory to ensure clean start
-        player.getInventory().clear();
+        PlayerUtils.clearInventory(player);
 
         ItemStack shovel = new ItemStack(Material.DIAMOND_SHOVEL);
         ItemMeta meta = shovel.getItemMeta();
@@ -98,9 +98,6 @@ public class Spleef implements Minigame {
             shovel.setItemMeta(meta);
         }
         player.getInventory().setItem(0, shovel);
-
-        // Give Wind Charges in off-hand
-        player.getInventory().setItemInOffHand(new ItemStack(Material.WIND_CHARGE, 16));
 
         // Apply Slow Falling effect for the "snow fall" feel (100 ticks = 5 seconds)
         // This allows players to drift and choose where they land.
