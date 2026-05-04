@@ -32,12 +32,23 @@ public final class Constants {
     public static final String GAME_MANAGER_NEXT_GAME         = "§6Next game: §e%s";
     public static final String LOGGER_NO_GAME_PRESELECTED     = "No minigame was pre-selected. Stopping game loop.";
     public static final String LOGGER_NEXT_GAME_PRELOADING    = "Pre-loading: %s (%d arena(s)).";
+    public static final String LOGGER_NO_GAME_ROUND_START     = "Cannot start game loop: no minigame available for round %d (active=%d, spectators=%d, total=%d).";
     public static final String LOGGER_MINIGAME_STOPPED        = "Minigame stopped: %s.";
     public static final String LOGGER_MINIGAME_STARTED        = "Minigame started: %s (%ds).";
+    public static final String LOGGER_NO_GAME_FOR_ROUND       = "No minigame available for round %d (active=%d, spectators=%d, total=%d).";
     public static final String LOGGER_MINIGAME_ENDED          = "Minigame ended: %s.";
     public static final String LOGGER_TELEPORT_WORLD_NULL     = "Cannot teleport %s: spawn world is null.";
-    public static final String LOGGER_NO_GAME_ROUND_START     = "Cannot start game loop: no minigame available for round %d (activeParticipants=%d, spectators=%d, total=%d).";
-    public static final String LOGGER_NO_GAME_FOR_ROUND       = "No minigame available for round %d (activeParticipants=%d, spectators=%d, total=%d).";
+
+    // ──────────────────────────────────────────────
+    //  Configuration
+    // ──────────────────────────────────────────────
+    public static final String CONFIG_USAGE           = "§b[OtterConfig] §7Use §f/ottergames config list§7, §f/ottergames config enable <name> §7or §f/ottergames config disable <name>§7.";
+    public static final String CONFIG_LIST_HEADER     = "§6=== Minigames Status ===";
+    public static final String CONFIG_GAME_ENTRY      = "§7- %s: %s";
+    public static final String CONFIG_GAME_ENABLED    = "§aEnabled";
+    public static final String CONFIG_GAME_DISABLED   = "§cDisabled";
+    public static final String CONFIG_GAME_NOT_FOUND  = "§cGame '%s' not found.";
+    public static final String CONFIG_GAME_SET        = "§aGame '%s' is now %s§a.";
 
     // ──────────────────────────────────────────────
     //  Structure / Arena loading

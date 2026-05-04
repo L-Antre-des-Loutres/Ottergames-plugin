@@ -18,7 +18,7 @@ public class CommandHandler {
     }
 
     public void setup() {
-        Ottergames ottergamesCommand = new Ottergames(gameManager);
+        Ottergames ottergamesCommand = new Ottergames(plugin, gameManager);
         var ottergamesPluginCommand = Objects.requireNonNull(plugin.getCommand("ottergames"));
         ottergamesPluginCommand.setExecutor(ottergamesCommand);
         ottergamesPluginCommand.setTabCompleter(ottergamesCommand);
