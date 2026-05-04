@@ -108,6 +108,6 @@ public final class Constants {
     // ──────────────────────────────────────────────
     public static final String STRUCTURE_DROPPER   = "dropper/ottergames_dropper_warden";
     public static final String STRUCTURE_HIKABRAIN = "ottergames_hikabrain_map";
-    public static final String STRUCTURE_SPLEEF    = "ottergames_spleef_single_floor";
+    public static final String STRUCTURE_SPLEEF    = "spleef/ottergames_spleef_single_floor";
     public static final String STRUCTURE_LOBBY     = "ottergames_lobby";
 }
