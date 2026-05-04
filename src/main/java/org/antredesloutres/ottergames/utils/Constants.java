@@ -10,7 +10,7 @@ public final class Constants {
     //  Arena
     // ──────────────────────────────────────────────
     public static final int ARENA_BASE_X = 10000;
-    public static final int ARENA_BASE_Y = 64;
+    public static final int ARENA_BASE_Y = -62;
     public static final int ARENA_BASE_Z = 0;
     public static final int OUTER_PADDING = 20;
 
