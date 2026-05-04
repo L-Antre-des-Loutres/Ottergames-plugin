@@ -11,10 +11,13 @@ import org.antredesloutres.ottergames.models.participant.GamePlayer;
 import org.antredesloutres.ottergames.utils.Constants;
 import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -313,9 +316,29 @@ public class GameManager {
             playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
             playerArenaAssignments.put(player.getUniqueId(), lobby);
             player.teleport(spawn);
+            resetPlayerForLobby(player);
             lobbyGame.applyStartingInventory(player);
-            healPlayer(player);
         }
+    }
+
+    private void resetPlayerForLobby(Player player) {
+        // Reset GENERIC_MAX_HEALTH to its vanilla default (e.g. Dropper sets it to 1)
+        var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        if (maxHealth != null) {
+            maxHealth.setBaseValue(maxHealth.getDefaultValue());
+        }
+
+        // Remove all potion effects except Night Vision
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            if (effect.getType() != PotionEffectType.NIGHT_VISION) {
+                player.removePotionEffect(effect.getType());
+            }
+        }
+
+        player.setGameMode(GameMode.ADVENTURE);
+        player.setInvulnerable(false);
+        player.setAbsorptionAmount(0);
+        healPlayer(player);
     }
 
     private void healPlayer(Player player) {

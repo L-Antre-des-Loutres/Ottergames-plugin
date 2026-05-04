@@ -126,6 +126,7 @@ public class Dropper implements Minigame {
         if (!VICTORY_ZONE.contains(arena, event.getTo())) return;
 
         finishedPlayers.add(playerId);
+        player.setInvulnerable(true);
 
         player.showTitle(Title.title(
                 Component.text(Constants.DROPPER_VICTORY_TITLE, NamedTextColor.GOLD),
