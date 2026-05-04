@@ -150,6 +150,34 @@ public class Spleef implements Minigame {
     }
 
     @Override
+    public void onPlayerMove(org.bukkit.event.player.PlayerMoveEvent event, GameManager gameManager) {
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+
+        // If player is already spectating or not in an arena, no need to check
+        if (player.getGameMode() == GameMode.SPECTATOR) return;
+
+        ArenaInstance arena = gameManager.getPlayerArena(playerId);
+        if (arena == null) return;
+
+        Location to = event.getTo();
+        Location origin = arena.origin();
+        org.bukkit.util.BlockVector size = arena.size();
+
+        // Check if the player is within the horizontal (X and Z) bounds of the arena
+        boolean withinHorizontalBounds = to.getX() >= origin.getX() && to.getX() <= origin.getX() + size.getBlockX()
+                && to.getZ() >= origin.getZ() && to.getZ() <= origin.getZ() + size.getBlockZ();
+
+        // Eliminate if the player is within horizontal bounds and falls into the bottom 3 blocks of the arena
+        if (withinHorizontalBounds && to.getY() < origin.getY() + 2) {
+            gameManager.eliminatePlayer(playerId);
+            player.setGameMode(GameMode.SPECTATOR);
+            player.sendMessage(Constants.ARENA_ELIMINATED_BOUNDS);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_DEATH, 1.0f, 1.0f);
+        }
+    }
+
+    @Override
     public void onPlayerInteractEntity(org.bukkit.event.player.PlayerInteractEntityEvent event, GameManager gameManager) {
         // Block all entity interactions in Spleef (Armor Stands, etc.)
         event.setCancelled(true);
