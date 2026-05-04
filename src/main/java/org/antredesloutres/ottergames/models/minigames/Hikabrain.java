@@ -9,7 +9,9 @@ import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondit
 import org.antredesloutres.ottergames.models.arena.ArenaRegion;
 import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
 import org.antredesloutres.ottergames.models.arena.MinigameArena;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.antredesloutres.ottergames.utils.StructureSpawner;
+import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -136,14 +138,14 @@ public class Hikabrain implements Minigame {
         for (ArenaRegion region : PROTECTED_REGIONS) {
             if (region.contains(arena, blockLocation)) {
                 if (!region.allowBlockChanges()) {
-                    player.sendMessage("§c✗ Tu ne peux pas modifier cette zone!");
+                    player.sendMessage(Constants.HIKABRAIN_PROTECTED_ZONE);
                     return false;
                 }
             }
         }
 
         if (blockLocation.getBlock().getType() == Material.OBSIDIAN) {
-            player.sendMessage("§c✗ Tu ne peux pas casser d'obsidienne!");
+            player.sendMessage(Constants.HIKABRAIN_PROTECTED_OBSIDIAN);
             return false;
         }
 
@@ -250,11 +252,11 @@ public class Hikabrain implements Minigame {
                 if (relX < 24) {
                     playerTeams.put(playerId, TEAM_1);
                     Player p = Bukkit.getPlayer(playerId);
-                    if (p != null) p.sendMessage("§aTu es dans la §cTeam Rouge §a!");
+                    if (p != null) p.sendMessage(Constants.HIKABRAIN_JOIN_TEAM_RED);
                 } else {
                     playerTeams.put(playerId, TEAM_2);
                     Player p = Bukkit.getPlayer(playerId);
-                    if (p != null) p.sendMessage("§aTu es dans la §9Team Bleue §a!");
+                    if (p != null) p.sendMessage(Constants.HIKABRAIN_JOIN_TEAM_BLUE);
                 }
             }
         }
@@ -281,21 +283,23 @@ public class Hikabrain implements Minigame {
                 }
             }
 
+            String team1List = team1Players.stream().map(Player::getName).collect(Collectors.joining(", "));
+            String team2List = team2Players.stream().map(Player::getName).collect(Collectors.joining(", "));
+
             String winnerMessage;
             if (score1 > score2) {
-                winnerMessage = "§c✨ Team Rouge ✨§a (" + team1Players.stream().map(Player::getName).collect(Collectors.joining(", ")) + ") a gagné!";
+                winnerMessage = String.format(Constants.HIKABRAIN_WINNER_RED, team1List);
             } else if (score2 > score1) {
-                winnerMessage = "§9✨ Team Bleue ✨§a (" + team2Players.stream().map(Player::getName).collect(Collectors.joining(", ")) + ") a gagné!";
+                winnerMessage = String.format(Constants.HIKABRAIN_WINNER_BLUE, team2List);
             } else {
-                winnerMessage = "§7✨ Égalité! ✨";
+                winnerMessage = Constants.HIKABRAIN_DRAW;
             }
 
             for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
                 if (playerEntry.getValue().equals(entry.getKey())) {
                     Player p = Bukkit.getPlayer(playerEntry.getKey());
                     if (p != null) {
-                        p.sendMessage("§6=== Fin du Hikabrain ===");
-                        p.sendMessage("§eScore final: Rouge §c" + score1 + " §f- §9" + score2 + " §eBleu");
+                        p.sendMessage(String.format(Constants.HIKABRAIN_GAME_END_SCORE, score1, score2));
                         p.sendMessage(winnerMessage);
                         p.playSound(p, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
                     }
@@ -328,16 +332,15 @@ public class Hikabrain implements Minigame {
             Map<String, Integer> scores = arenaScores.get(arena);
             int score1 = scores.get(TEAM_1);
             int score2 = scores.get(TEAM_2);
+            String teamDisplayName = team.equals(TEAM_1) ? "Red Team" : "Blue Team";
 
             for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
                 if (playerEntry.getValue().equals(arena)) {
                     Player p = Bukkit.getPlayer(playerEntry.getKey());
                     if (p != null) {
-                        p.sendMessage("§6Un point a été marqué ! Score actuel: Rouge §c" + score1 + " §f- §9" + score2 + " §6Bleu");
+                        p.sendMessage(String.format(Constants.HIKABRAIN_POINT_SCORED, player.getName(), teamDisplayName, score1, score2));
                         healPlayer(p);
-                        p.getInventory().clear();
-                        p.getInventory().setArmorContents(null);
-                        p.getInventory().setItemInOffHand(null);
+                        PlayerUtils.clearInventory(p);
                         Location spawn = gameManager.getPlayerSpawnLocation(p.getUniqueId());
                         if (spawn != null) {
                             p.teleport(spawn);

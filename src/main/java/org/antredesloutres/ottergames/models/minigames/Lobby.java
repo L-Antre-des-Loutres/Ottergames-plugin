@@ -5,6 +5,7 @@ import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
 import org.antredesloutres.ottergames.models.arena.MinigameArena;
+import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -69,10 +70,7 @@ public class Lobby implements Minigame {
     @Override
     public void applyStartingInventory(Player player) {
         // Clear inventory in the lobby.
-        player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
-        player.getInventory().setItemInOffHand(null);
-        player.updateInventory();
+        PlayerUtils.clearInventory(player);
     }
 
     @Override
