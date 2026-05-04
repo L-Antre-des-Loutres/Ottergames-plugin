@@ -42,13 +42,19 @@ public final class Constants {
     // ──────────────────────────────────────────────
     //  Configuration
     // ──────────────────────────────────────────────
-    public static final String CONFIG_USAGE           = "§b[OtterConfig] §7Use §f/ottergames config list§7, §f/ottergames config enable <name> §7or §f/ottergames config disable <name>§7.";
+    public static final String CONFIG_USAGE           = "§b[OtterConfig] §7Use §f/ottergames config games §7or §f/ottergames config rules§7.";
+    public static final String CONFIG_GAMES_USAGE     = "§b[OtterConfig] §7Use §f/ottergames config games list§7, §f... enable <name> §7or §f... disable <name>§7.";
+    public static final String CONFIG_RULES_USAGE     = "§b[OtterConfig] §7Use §f/ottergames config rules list §7or §f... preventConsecutive <true|false>§7.";
     public static final String CONFIG_LIST_HEADER     = "§6=== Minigames Status ===";
+    public static final String CONFIG_RULES_HEADER    = "§6=== Game Rules ===";
     public static final String CONFIG_GAME_ENTRY      = "§7- %s: %s";
     public static final String CONFIG_GAME_ENABLED    = "§aEnabled";
     public static final String CONFIG_GAME_DISABLED   = "§cDisabled";
     public static final String CONFIG_GAME_NOT_FOUND  = "§cGame '%s' not found.";
     public static final String CONFIG_GAME_SET        = "§aGame '%s' is now %s§a.";
+    public static final String CONFIG_PREVENT_CONSECUTIVE_SET = "§aPrevent consecutive games is now %s§a.";
+    public static final String CONFIG_USAGE_PREVENT_CONSECUTIVE = "§cUsage: /ottergames config rules preventConsecutive <true|false>";
+    public static final String CONFIG_STATUS_LINE     = "§7- Prevent consecutive: %s";
 
     // ──────────────────────────────────────────────
     //  Structure / Arena loading

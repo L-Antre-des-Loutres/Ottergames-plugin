@@ -35,10 +35,12 @@ public class ConfigManager {
         this.config = YamlConfiguration.loadConfiguration(configFile);
         List<String> disabled = config.getStringList("disabled-games");
         gameConfig.setDisabledGames(new HashSet<>(disabled));
+        gameConfig.setPreventSameGameConsecutively(config.getBoolean("prevent-same-game-consecutively", true));
     }
 
     public void save() {
         config.set("disabled-games", List.copyOf(gameConfig.getDisabledGames()));
+        config.set("prevent-same-game-consecutively", gameConfig.isPreventSameGameConsecutively());
         try {
             config.save(configFile);
         } catch (IOException e) {
