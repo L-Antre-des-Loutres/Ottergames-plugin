@@ -64,8 +64,8 @@ public class ArenaSlotManager {
         Structure structure = StructureSpawner.load(plugin, structureName);
         if (structure == null) return Collections.emptyList();
 
-        plugin.getLogger().info("Loaded structure " + structureName
-                + " size=" + structure.getSize().getBlockX() + "x" + structure.getSize().getBlockY() + "x" + structure.getSize().getBlockZ());
+        plugin.getLogger().info(String.format(LOGGER_STRUCTURE_LOADED, structureName,
+                structure.getSize().getBlockX(), structure.getSize().getBlockY(), structure.getSize().getBlockZ()));
 
         int instanceWidthX = structure.getSize().getBlockX();
         int instanceDepthZ = structure.getSize().getBlockZ();
@@ -87,8 +87,8 @@ public class ArenaSlotManager {
             Location origin = new Location(getWorld(), batchStartX, ARENA_BASE_Y, ARENA_BASE_Z + zOffset);
             result.add(StructureSpawner.place(structure, origin));
             
-            plugin.getLogger().info("Placed instance " + (i + 1) + "/" + instanceCount
-                    + " @ x=" + batchStartX + " y=" + ARENA_BASE_Y + " z=" + (ARENA_BASE_Z + zOffset));
+            plugin.getLogger().info(String.format(LOGGER_ARENA_PLACED,
+                    i + 1, instanceCount, batchStartX, ARENA_BASE_Y, ARENA_BASE_Z + zOffset));
         }
 
         return result;
@@ -109,7 +109,7 @@ public class ArenaSlotManager {
 
         Integer endX = allocatedBatches.remove(startX);
         if (endX == null) {
-            plugin.getLogger().warning("ArenaSlotManager: slot unknown for startX=" + startX + ", skipping free operation.");
+            plugin.getLogger().warning(String.format(LOGGER_ARENA_SLOT_UNKNOWN, startX));
             return;
         }
 

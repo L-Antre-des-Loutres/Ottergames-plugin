@@ -25,12 +25,12 @@ public final class StructureSpawner {
         String path = "structures/" + name + ".nbt";
         try (InputStream stream = plugin.getResource(path)) {
             if (stream == null) {
-                plugin.getLogger().warning("Structure not found in resources: " + path);
+                plugin.getLogger().warning(String.format(Constants.LOGGER_STRUCTURE_NOT_FOUND, path));
                 return null;
             }
             return plugin.getServer().getStructureManager().loadStructure(stream);
         } catch (IOException e) {
-            plugin.getLogger().severe("Error loading structure: " + e.getMessage());
+            plugin.getLogger().severe(String.format(Constants.LOGGER_STRUCTURE_LOAD_ERROR, e.getMessage()));
             e.printStackTrace();
             return null;
         }

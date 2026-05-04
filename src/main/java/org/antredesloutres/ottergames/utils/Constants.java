@@ -32,6 +32,21 @@ public final class Constants {
     public static final String GAME_MANAGER_NEXT_GAME         = "§6Next game: §e%s";
     public static final String LOGGER_NO_GAME_PRESELECTED     = "No minigame was pre-selected. Stopping game loop.";
     public static final String LOGGER_NEXT_GAME_PRELOADING    = "Pre-loading: %s (%d arena(s)).";
+    public static final String LOGGER_MINIGAME_STOPPED        = "Minigame stopped: %s.";
+    public static final String LOGGER_MINIGAME_STARTED        = "Minigame started: %s (%ds).";
+    public static final String LOGGER_MINIGAME_ENDED          = "Minigame ended: %s.";
+    public static final String LOGGER_TELEPORT_WORLD_NULL     = "Cannot teleport %s: spawn world is null.";
+    public static final String LOGGER_NO_GAME_ROUND_START     = "Cannot start game loop: no minigame available for round %d (activeParticipants=%d, spectators=%d, total=%d).";
+    public static final String LOGGER_NO_GAME_FOR_ROUND       = "No minigame available for round %d (activeParticipants=%d, spectators=%d, total=%d).";
+
+    // ──────────────────────────────────────────────
+    //  Structure / Arena loading
+    // ──────────────────────────────────────────────
+    public static final String LOGGER_STRUCTURE_NOT_FOUND  = "Structure not found in resources: %s";
+    public static final String LOGGER_STRUCTURE_LOAD_ERROR = "Error loading structure: %s";
+    public static final String LOGGER_STRUCTURE_LOADED     = "Loaded structure %s size=%dx%dx%d";
+    public static final String LOGGER_ARENA_PLACED         = "Placed instance %d/%d @ x=%d y=%d z=%d";
+    public static final String LOGGER_ARENA_SLOT_UNKNOWN   = "ArenaSlotManager: slot unknown for startX=%d, skipping free operation.";
 
     // ──────────────────────────────────────────────
     //  Arena listener
@@ -51,6 +66,8 @@ public final class Constants {
     // ──────────────────────────────────────────────
     //  Minigames - Hikabrain
     // ──────────────────────────────────────────────
+    public static final String HIKABRAIN_TEAM_RED_NAME      = "Red Team";
+    public static final String HIKABRAIN_TEAM_BLUE_NAME     = "Blue Team";
     public static final String HIKABRAIN_JOIN_TEAM_RED      = "§aYou are on the §cRed Team §a!";
     public static final String HIKABRAIN_JOIN_TEAM_BLUE     = "§aYou are on the §9Blue Team §a!";
     public static final String HIKABRAIN_PROTECTED_ZONE     = "§c✗ You cannot modify this zone!";

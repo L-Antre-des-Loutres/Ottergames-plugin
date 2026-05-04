@@ -80,12 +80,12 @@ public class GameManager {
         participantManager.registerOnlinePlayersAsParticipants();
         GameSelectionContext initialSelectionContext = buildSelectionContext(1);
         if (getSelectableGames(initialSelectionContext).isEmpty()) {
-            plugin.getLogger().warning(
-                    "Cannot start game loop: no minigame available for round " + initialSelectionContext.roundNumber()
-                            + " (activeParticipants=" + initialSelectionContext.activeParticipantCount()
-                            + ", spectators=" + initialSelectionContext.spectatorCount()
-                            + ", total=" + initialSelectionContext.totalParticipantCount() + ")."
-            );
+            plugin.getLogger().warning(String.format(Constants.LOGGER_NO_GAME_ROUND_START,
+                    initialSelectionContext.roundNumber(),
+                    initialSelectionContext.activeParticipantCount(),
+                    initialSelectionContext.spectatorCount(),
+                    initialSelectionContext.totalParticipantCount()
+            ));
             return false;
         }
 
@@ -119,7 +119,7 @@ public class GameManager {
             currentGame.onEnd(this);
             arenaSlotManager.free(currentArenas);
             currentArenas = Collections.emptyList();
-            plugin.getLogger().info("Minigame stopped: " + currentGame.getName() + ".");
+            plugin.getLogger().info(String.format(Constants.LOGGER_MINIGAME_STOPPED, currentGame.getName()));
         }
 
         // Free lobby
@@ -273,7 +273,7 @@ public class GameManager {
             Bukkit.getPluginManager().registerEvents(listener, plugin);
         }
 
-        plugin.getLogger().info("Minigame started: " + currentGame.getName() + " (" + timer + "s).");
+        plugin.getLogger().info(String.format(Constants.LOGGER_MINIGAME_STARTED, currentGame.getName(), timer));
     }
 
     private void prepareNextMinigame() {
@@ -283,12 +283,12 @@ public class GameManager {
         if (selectableGames.isEmpty()) {
             nextGame = null;
             nextArenas = Collections.emptyList();
-            plugin.getLogger().warning(
-                    "No minigame available for round " + selectionContext.roundNumber()
-                            + " (activeParticipants=" + selectionContext.activeParticipantCount()
-                            + ", spectators=" + selectionContext.spectatorCount()
-                            + ", total=" + selectionContext.totalParticipantCount() + ")."
-            );
+            plugin.getLogger().warning(String.format(Constants.LOGGER_NO_GAME_FOR_ROUND,
+                    selectionContext.roundNumber(),
+                    selectionContext.activeParticipantCount(),
+                    selectionContext.spectatorCount(),
+                    selectionContext.totalParticipantCount()
+            ));
             return;
         }
 
@@ -310,7 +310,7 @@ public class GameManager {
         participantManager.clearDisconnectedDuringGamePlayers();
         clearAllParticipantsInventories();
 
-        plugin.getLogger().info("Minigame ended: " + gameName + ".");
+        plugin.getLogger().info(String.format(Constants.LOGGER_MINIGAME_ENDED, gameName));
         isPaused = true;
         currentGame = lobbyGame;
         timer = BREAK_TIME_SECONDS;
@@ -424,7 +424,7 @@ public class GameManager {
 
                 var spawnLocation = currentGame.getSpawnLocation(arena, random, playerIndex, playersInArena.size());
                 if (spawnLocation.getWorld() == null) {
-                    plugin.getLogger().warning("Cannot teleport " + player.getName() + ": spawn world is null.");
+                    plugin.getLogger().warning(String.format(Constants.LOGGER_TELEPORT_WORLD_NULL, player.getName()));
                     continue;
                 }
                 playerSpawnLocations.put(player.getUniqueId(), spawnLocation.clone());

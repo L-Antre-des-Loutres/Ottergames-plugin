@@ -340,7 +340,7 @@ public class Hikabrain implements Minigame {
             Map<String, Integer> scores = arenaScores.get(arena);
             int score1 = scores.get(TEAM_1);
             int score2 = scores.get(TEAM_2);
-            String teamDisplayName = team.equals(TEAM_1) ? "Red Team" : "Blue Team";
+            String teamDisplayName = team.equals(TEAM_1) ? Constants.HIKABRAIN_TEAM_RED_NAME : Constants.HIKABRAIN_TEAM_BLUE_NAME;
 
             for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
                 if (playerEntry.getValue().equals(arena)) {
