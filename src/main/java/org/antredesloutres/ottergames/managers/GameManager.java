@@ -138,11 +138,12 @@ public class GameManager {
         clearAllParticipantsInventories();
         clearAllParticipantsXp();
 
-        // Teleport everyone to world spawn
+        // Teleport everyone to world spawn and reset health/state
         for (GamePlayer gamePlayer : participantManager.getParticipants()) {
             Player player = Bukkit.getPlayer(gamePlayer.getUuid());
             if (player != null && player.isOnline()) {
                 player.teleport(player.getWorld().getSpawnLocation());
+                resetForLobby(player, GameMode.SURVIVAL); // Reset health, effects, and mode
             }
         }
 
