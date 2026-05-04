@@ -30,6 +30,9 @@ public final class Constants {
     public static final String GAME_MANAGER_STARTING_OTTER    = "OtterGames starts in...";
     public static final String GAME_MANAGER_REJOINED          = "§aYou have been re-enrolled for the next Ottergames.";
     public static final String GAME_MANAGER_NO_GAME_AVAILABLE = "§cNo minigame compatible with the current situation. Game stopped.";
+    public static final String GAME_MANAGER_NEXT_GAME         = "§6Next game: §e%s";
+    public static final String LOGGER_NO_GAME_PRESELECTED     = "No minigame was pre-selected. Stopping game loop.";
+    public static final String LOGGER_NEXT_GAME_PRELOADING    = "Pre-loading: %s (%d arena(s)).";
 
     // ──────────────────────────────────────────────
     //  Arena listener

@@ -45,6 +45,8 @@ public class GameManager {
     private List<ArenaInstance> lobbyArenas = Collections.emptyList();
     private Minigame currentGame;
     private List<ArenaInstance> currentArenas = Collections.emptyList();
+    private Minigame nextGame = null;
+    private List<ArenaInstance> nextArenas = Collections.emptyList();
     private final Map<UUID, Location> playerSpawnLocations = new HashMap<>();
     private final Map<UUID, ArenaInstance> playerArenaAssignments = new HashMap<>();
     private int timer;
@@ -99,6 +101,7 @@ public class GameManager {
         this.currentGame = lobbyGame;
 
         teleportToLobby();
+        prepareNextMinigame();
 
         this.loopTask = new BukkitRunnable() {
             @Override
@@ -124,6 +127,13 @@ public class GameManager {
             arenaSlotManager.free(lobbyArenas);
             lobbyArenas = Collections.emptyList();
         }
+
+        // Free pre-loaded next game arenas (may exist if stopped during break time)
+        if (!nextArenas.isEmpty()) {
+            arenaSlotManager.free(nextArenas);
+            nextArenas = Collections.emptyList();
+        }
+        nextGame = null;
 
         clearAllParticipantsInventories();
         clearAllParticipantsXp();
@@ -238,25 +248,18 @@ public class GameManager {
     }
 
     private void startNextMinigame() {
-        GameSelectionContext selectionContext = buildSelectionContext(currentRound + 1);
-
-        List<Minigame> selectableGames = getSelectableGames(selectionContext);
-        if (selectableGames.isEmpty()) {
-            currentGame = null;
+        if (nextGame == null) {
             Bukkit.broadcastMessage(Constants.GAME_MANAGER_NO_GAME_AVAILABLE);
-            plugin.getLogger().warning(
-                    "No minigame available for round " + selectionContext.roundNumber()
-                            + " (activeParticipants=" + selectionContext.activeParticipantCount()
-                            + ", spectators=" + selectionContext.spectatorCount()
-                            + ", total=" + selectionContext.totalParticipantCount() + "). Stopping game loop."
-            );
+            plugin.getLogger().warning(Constants.LOGGER_NO_GAME_PRESELECTED);
             stopEverything();
             return;
         }
 
-        currentGame = selectableGames.get(random.nextInt(selectableGames.size()));
-        currentArenas = arenaSlotManager.allocate(currentGame.getStructureName(), currentGame.getInstanceCount(selectionContext));
-        currentRound = selectionContext.roundNumber();
+        currentGame = nextGame;
+        currentArenas = nextArenas;
+        nextGame = null;
+        nextArenas = Collections.emptyList();
+        currentRound++;
         isPaused = false;
         timer = currentGame.getDurationSeconds();
         maxTimer = timer;
@@ -280,6 +283,28 @@ public class GameManager {
         plugin.getLogger().info("Minigame started: " + currentGame.getName() + " (" + timer + "s).");
     }
 
+    private void prepareNextMinigame() {
+        GameSelectionContext selectionContext = buildSelectionContext(currentRound + 1);
+        List<Minigame> selectableGames = getSelectableGames(selectionContext);
+
+        if (selectableGames.isEmpty()) {
+            nextGame = null;
+            nextArenas = Collections.emptyList();
+            plugin.getLogger().warning(
+                    "No minigame available for round " + selectionContext.roundNumber()
+                            + " (activeParticipants=" + selectionContext.activeParticipantCount()
+                            + ", spectators=" + selectionContext.spectatorCount()
+                            + ", total=" + selectionContext.totalParticipantCount() + ")."
+            );
+            return;
+        }
+
+        nextGame = selectableGames.get(random.nextInt(selectableGames.size()));
+        nextArenas = arenaSlotManager.allocate(nextGame.getStructureName(), nextGame.getInstanceCount(selectionContext));
+        Bukkit.broadcastMessage(String.format(Constants.GAME_MANAGER_NEXT_GAME, nextGame.getName()));
+        plugin.getLogger().info(String.format(Constants.LOGGER_NEXT_GAME_PRELOADING, nextGame.getName(), nextArenas.size()));
+    }
+
     private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
 
@@ -300,6 +325,7 @@ public class GameManager {
         Bukkit.broadcastMessage(String.format(Constants.GAME_MANAGER_BREAK_TIME, timer));
 
         teleportToLobby();
+        prepareNextMinigame();
     }
 
     private void teleportToLobby() {
@@ -350,8 +376,8 @@ public class GameManager {
     }
 
     private void showStartCountdown(int secondsRemaining) {
-        String subtitleMessage = (currentGame != null && currentGame != lobbyGame)
-                ? String.format(Constants.GAME_MANAGER_STARTING_GAME, currentGame.getName())
+        String subtitleMessage = (nextGame != null)
+                ? String.format(Constants.GAME_MANAGER_STARTING_GAME, nextGame.getName())
                 : Constants.GAME_MANAGER_STARTING_OTTER;
 
         var title = Title.title(
