@@ -98,24 +98,38 @@ public class Ottergames implements TabExecutor {
             return;
         }
 
-        String sub = args[1].toLowerCase(Locale.ROOT);
+        String category = args[1].toLowerCase(Locale.ROOT);
         GameManager gm = gameManager;
 
+        switch (category) {
+            case "games" -> handleGamesConfig(sender, args, gm);
+            case "rules" -> handleRulesConfig(sender, args, gm);
+            default -> sender.sendMessage(Constants.CONFIG_USAGE);
+        }
+    }
+
+    private void handleGamesConfig(CommandSender sender, String[] args, GameManager gm) {
+        if (args.length < 3) {
+            sender.sendMessage(Constants.CONFIG_GAMES_USAGE);
+            return;
+        }
+
+        String sub = args[2].toLowerCase(Locale.ROOT);
         switch (sub) {
             case "list" -> {
                 sender.sendMessage(Constants.CONFIG_LIST_HEADER);
                 for (Minigame game : gm.getGames()) {
-                    String status = gm.getConfigManager().getGameConfig().isGameEnabled(game.getName()) 
+                    String status = gm.getConfigManager().getGameConfig().isGameEnabled(game.getName())
                             ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
                     sender.sendMessage(String.format(Constants.CONFIG_GAME_ENTRY, game.getName(), status));
                 }
             }
             case "enable", "disable" -> {
-                if (args.length < 3) {
-                    sender.sendMessage("§cUsage: /ottergames config " + sub + " <game_name>");
+                if (args.length < 4) {
+                    sender.sendMessage("§cUsage: /ottergames config games " + sub + " <game_name>");
                     return;
                 }
-                String gameName = args[2];
+                String gameName = args[3];
                 Minigame target = null;
                 for (Minigame g : gm.getGames()) {
                     if (g.getName().equalsIgnoreCase(gameName)) {
@@ -135,7 +149,36 @@ public class Ottergames implements TabExecutor {
                 String statusLabel = enable ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
                 sender.sendMessage(String.format(Constants.CONFIG_GAME_SET, target.getName(), statusLabel));
             }
-            default -> sender.sendMessage(Constants.CONFIG_USAGE);
+            default -> sender.sendMessage(Constants.CONFIG_GAMES_USAGE);
+        }
+    }
+
+    private void handleRulesConfig(CommandSender sender, String[] args, GameManager gm) {
+        if (args.length < 3) {
+            sender.sendMessage(Constants.CONFIG_RULES_USAGE);
+            return;
+        }
+
+        String sub = args[2].toLowerCase(Locale.ROOT);
+        switch (sub) {
+            case "list" -> {
+                sender.sendMessage(Constants.CONFIG_RULES_HEADER);
+                String status = gm.getConfigManager().getGameConfig().isPreventSameGameConsecutively()
+                        ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
+                sender.sendMessage(String.format(Constants.CONFIG_STATUS_LINE, status));
+            }
+            case "preventconsecutive" -> {
+                if (args.length < 4) {
+                    sender.sendMessage(Constants.CONFIG_USAGE_PREVENT_CONSECUTIVE);
+                    return;
+                }
+                boolean prevent = Boolean.parseBoolean(args[3]);
+                gm.getConfigManager().getGameConfig().setPreventSameGameConsecutively(prevent);
+                gm.getConfigManager().save();
+                String statusLabel = prevent ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
+                sender.sendMessage(String.format(Constants.CONFIG_PREVENT_CONSECUTIVE_SET, statusLabel));
+            }
+            default -> sender.sendMessage(Constants.CONFIG_RULES_USAGE);
         }
     }
 
@@ -153,11 +196,21 @@ public class Ottergames implements TabExecutor {
         if (args.length == 1) {
             StringUtil.copyPartialMatches(args[0].toLowerCase(Locale.ROOT), List.of(OTTERGAMES_ARGS_START, OTTERGAMES_ARGS_STOP, OTTERGAMES_ARGS_LEAVE, "config"), completions);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("config")) {
-            StringUtil.copyPartialMatches(args[1].toLowerCase(Locale.ROOT), List.of("list", "enable", "disable"), completions);
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("config") && (args[1].equalsIgnoreCase("enable") || args[1].equalsIgnoreCase("disable"))) {
-            List<String> gameNames = new ArrayList<>();
-            for (Minigame g : gameManager.getGames()) gameNames.add(g.getName());
-            StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), gameNames, completions);
+            StringUtil.copyPartialMatches(args[1].toLowerCase(Locale.ROOT), List.of("games", "rules"), completions);
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("config")) {
+            if (args[1].equalsIgnoreCase("games")) {
+                StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "enable", "disable"), completions);
+            } else if (args[1].equalsIgnoreCase("rules")) {
+                StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "preventConsecutive"), completions);
+            }
+        } else if (args.length == 4 && args[0].equalsIgnoreCase("config")) {
+            if (args[1].equalsIgnoreCase("games") && (args[2].equalsIgnoreCase("enable") || args[2].equalsIgnoreCase("disable"))) {
+                List<String> gameNames = new ArrayList<>();
+                for (Minigame g : gameManager.getGames()) gameNames.add(g.getName());
+                StringUtil.copyPartialMatches(args[3].toLowerCase(Locale.ROOT), gameNames, completions);
+            } else if (args[1].equalsIgnoreCase("rules") && args[2].equalsIgnoreCase("preventConsecutive")) {
+                StringUtil.copyPartialMatches(args[3].toLowerCase(Locale.ROOT), List.of("true", "false"), completions);
+            }
         }
         return completions;
     }

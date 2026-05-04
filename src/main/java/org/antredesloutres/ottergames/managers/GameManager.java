@@ -45,6 +45,7 @@ public class GameManager {
     private final Lobby lobbyGame;
     private List<ArenaInstance> lobbyArenas = Collections.emptyList();
     private Minigame currentGame;
+    private Minigame lastGame = null;
     private List<ArenaInstance> currentArenas = Collections.emptyList();
     private Minigame nextGame = null;
     private List<ArenaInstance> nextArenas = Collections.emptyList();
@@ -144,6 +145,7 @@ public class GameManager {
             nextArenas = Collections.emptyList();
         }
         nextGame = null;
+        lastGame = null; // Reset last game played on full stop
 
         clearAllParticipantsInventories();
         clearAllParticipantsXp();
@@ -313,6 +315,7 @@ public class GameManager {
 
     private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
+        lastGame = currentGame;
 
         currentGame.onEnd(this);
         arenaSlotManager.free(currentArenas);
@@ -404,13 +407,36 @@ public class GameManager {
     }
 
     private List<Minigame> getSelectableGames(GameSelectionContext selectionContext) {
-        List<Minigame> selectableGames = new ArrayList<>();
+        // 1. Identify all enabled and selectable games (ignoring consecutive rule for now)
+        List<Minigame> availableGames = new ArrayList<>();
         for (Minigame game : games) {
             if (configManager.getGameConfig().isGameEnabled(game.getName()) && game.canBeSelected(selectionContext)) {
-                selectableGames.add(game);
+                availableGames.add(game);
             }
         }
-        return selectableGames;
+
+        if (availableGames.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        boolean preventConsecutive = configManager.getGameConfig().isPreventSameGameConsecutively();
+
+        // 2. If the consecutive rule is disabled, or no last game exists, or only 1 game is available, 
+        // return all available games (no filtering needed).
+        if (!preventConsecutive || lastGame == null || availableGames.size() <= 1) {
+            return availableGames;
+        }
+
+        // 3. Apply the consecutive filter
+        List<Minigame> filteredGames = new ArrayList<>();
+        for (Minigame game : availableGames) {
+            if (!game.getName().equals(lastGame.getName())) {
+                filteredGames.add(game);
+            }
+        }
+
+        // 4. Safety: if filtering removed everything (shouldn't happen if size > 1), return all available
+        return filteredGames.isEmpty() ? availableGames : filteredGames;
     }
 
     private GameSelectionContext buildSelectionContext(int roundNumber) {
