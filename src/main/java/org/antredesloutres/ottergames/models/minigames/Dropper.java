@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.managers.GameManager;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.arena.ArenaRegion;
 import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
@@ -45,7 +46,7 @@ public class Dropper implements Minigame {
     public int getDurationSeconds() { return 30; }
 
     @Override
-    public String getStructureName() { return "dropper/ottergames_dropper_warden"; }
+    public String getStructureName() { return Constants.STRUCTURE_DROPPER; }
 
     @Override
     public int getInstanceCount(GameSelectionContext selectionContext) { return 1; }
@@ -63,7 +64,7 @@ public class Dropper implements Minigame {
     public void applyStartingInventory(Player player) {
         player.setGameMode(GameMode.ADVENTURE);
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, -1, 0, false, false, false));
-        player.sendMessage("§aSurvivez à la chute !");
+        player.sendMessage(Constants.DROPPER_SURVIVE_MESSAGE);
         player.setHealth(1);
         Objects.requireNonNull(player.getAttribute(Attribute.GENERIC_MAX_HEALTH)).setBaseValue(1);
         player.getInventory().clear();
@@ -98,15 +99,15 @@ public class Dropper implements Minigame {
             }
         }
 
-        Bukkit.broadcastMessage("§6=== Fin du Dropper ===");
+        Bukkit.broadcastMessage(Constants.DROPPER_GAME_END);
         if (!winnerNames.isEmpty()) {
-            Bukkit.broadcastMessage("§e🏆 Gagnant(s) : §a" + String.join(", ", winnerNames));
+            Bukkit.broadcastMessage(Constants.DROPPER_WINNERS_PREFIX + String.join(", ", winnerNames));
         }
         if (!loserNames.isEmpty()) {
-            Bukkit.broadcastMessage("§c✗ Éliminé(s) : §7" + String.join(", ", loserNames));
+            Bukkit.broadcastMessage(Constants.DROPPER_LOSERS_PREFIX + String.join(", ", loserNames));
         }
         if (winnerNames.isEmpty()) {
-            Bukkit.broadcastMessage("§cPersonne n'a atteint le bas !");
+            Bukkit.broadcastMessage(Constants.DROPPER_NO_WINNER);
         }
 
         finishedPlayers.clear();
@@ -127,8 +128,8 @@ public class Dropper implements Minigame {
         finishedPlayers.add(playerId);
 
         player.showTitle(Title.title(
-                Component.text("Victoire !", NamedTextColor.GOLD),
-                Component.text("Tu as atteint le bas !", NamedTextColor.YELLOW),
+                Component.text(Constants.DROPPER_VICTORY_TITLE, NamedTextColor.GOLD),
+                Component.text(Constants.DROPPER_VICTORY_SUBTITLE, NamedTextColor.YELLOW),
                 Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(3), Duration.ofMillis(500))
         ));
         player.playSound(player, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
@@ -137,7 +138,7 @@ public class Dropper implements Minigame {
             if (!entry.getValue().equals(arena) || entry.getKey().equals(playerId)) continue;
             Player other = Bukkit.getPlayer(entry.getKey());
             if (other != null) {
-                other.sendMessage("§a" + player.getName() + " §6a atteint le bas !");
+                other.sendMessage(String.format(Constants.DROPPER_OTHER_REACHED, player.getName()));
             }
         }
 

@@ -3,6 +3,7 @@ package org.antredesloutres.ottergames;
 import org.antredesloutres.ottergames.handlers.CommandHandler;
 import org.antredesloutres.ottergames.handlers.ListenersHandler;
 import org.antredesloutres.ottergames.managers.GameManager;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin {
@@ -15,7 +16,7 @@ public final class Main extends JavaPlugin {
         new ListenersHandler(this, gameManager).setup(); // Enables listeners
         new CommandHandler(this, gameManager).setup(); // Enables commands
 
-        getLogger().info("Ottergames ready!");
+        getLogger().info(Constants.LOGGER_PLUGIN_READY);
     }
 
     @Override
@@ -24,7 +25,7 @@ public final class Main extends JavaPlugin {
             gameManager.stopEverything();
         }
 
-        getLogger().info("Ottergames disabled!");
+        getLogger().info(Constants.LOGGER_PLUGIN_DISABLED);
     }
 
 }

@@ -82,7 +82,7 @@ public class Hikabrain implements Minigame {
         this.plugin = plugin;
         this.structure = new MinigameArena(
                 plugin,
-                "ottergames_hikabrain_map",
+                Constants.STRUCTURE_HIKABRAIN,
                 2,
                 Map.of(
                         TEAM_1, new ArenaSpawnZone(2, 19, 9, 2, 19, 9, -90.0f, 19.3f),

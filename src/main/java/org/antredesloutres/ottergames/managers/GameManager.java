@@ -106,7 +106,7 @@ public class GameManager {
             }
         }.runTaskTimer(plugin, 0L, 20L);
 
-        plugin.getLogger().info("Ottergame game loop started with lobby.");
+        plugin.getLogger().info(Constants.LOGGER_LOOP_STARTED);
         return true;
     }
 
@@ -146,7 +146,7 @@ public class GameManager {
         for (UUID playerId : participantManager.getOptedOutPlayerIds()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
-                player.sendMessage("§aTu es reinscrit pour la prochaine partie Ottergames.");
+                player.sendMessage(Constants.GAME_MANAGER_REJOINED);
             }
         }
 
@@ -159,8 +159,7 @@ public class GameManager {
         this.running = false;
         participantManager.clearAll();
         participantManager.registerOnlinePlayersAsParticipants();
-        plugin.getLogger().info("Boucle OtterGames arretee.");
-        plugin.getLogger().info("Ottergame game loop stopped.");
+        plugin.getLogger().info(Constants.LOGGER_LOOP_STOPPED);
     }
 
     public boolean isRunning() {
@@ -243,7 +242,7 @@ public class GameManager {
         List<Minigame> selectableGames = getSelectableGames(selectionContext);
         if (selectableGames.isEmpty()) {
             currentGame = null;
-            Bukkit.broadcastMessage("§cAucun mini-jeu compatible avec la situation actuelle. Partie arrêtée.");
+            Bukkit.broadcastMessage(Constants.GAME_MANAGER_NO_GAME_AVAILABLE);
             plugin.getLogger().warning(
                     "No minigame available for round " + selectionContext.roundNumber()
                             + " (activeParticipants=" + selectionContext.activeParticipantCount()

@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -131,7 +132,7 @@ public class ArenaGameListener implements Listener {
                 // Eliminate the player
                 gameManager.eliminatePlayer(playerId);
                 player.setGameMode(org.bukkit.GameMode.SPECTATOR);
-                player.sendMessage("§cÉliminé ! Tu es sorti de l'arène.");
+                player.sendMessage(Constants.ARENA_ELIMINATED_BOUNDS);
             } else {
                 // Just teleport them back and handle optional heal/restore
                 player.teleport(spawnLocation);
@@ -240,7 +241,7 @@ public class ArenaGameListener implements Listener {
                             // Eliminate: set as spectator
                             gameManager.eliminatePlayer(playerId);
                             player.setGameMode(GameMode.SPECTATOR);
-                            player.sendMessage("§cÉliminé ! Tu es maintenant spectateur.");
+                            player.sendMessage(Constants.ARENA_ELIMINATED_DEATH);
                         } else {
                             // Re-randomize spawn on each death and teleport there
                             Location newSpawn = gameManager.rerandomizePlayerSpawn(playerId);

@@ -4,6 +4,7 @@ import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
 import org.antredesloutres.ottergames.models.arena.MinigameArena;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionCondition;
 import org.antredesloutres.ottergames.models.minigames.selection.SelectionConditions;
 import org.antredesloutres.ottergames.utils.PlayerUtils;
@@ -48,7 +49,7 @@ public class Spleef implements Minigame {
     public Spleef(Main plugin) {
         this.structure = new MinigameArena(
                 plugin,
-                "ottergames_spleef_single_floor",
+                Constants.STRUCTURE_SPLEEF,
                 8, // Up to 8 players
                 Map.of(
                     "middle", new ArenaSpawnZone(26, 28, 26, 29, 28, 29, 0f, 0f)

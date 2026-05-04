@@ -5,6 +5,7 @@ import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
 import org.antredesloutres.ottergames.models.arena.MinigameArena;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -25,7 +26,7 @@ public class Lobby implements Minigame {
         // We define a default spawn zone in the middle of the structure.
         this.structure = new MinigameArena(
                 plugin,
-                "ottergames_lobby",
+                Constants.STRUCTURE_LOBBY,
                 100,
                 Map.of("spawn", new ArenaSpawnZone(8, 19, 8, 8, 19, 8, 0f, 0f))
         );

@@ -2,6 +2,7 @@ package org.antredesloutres.ottergames.listeners;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.antredesloutres.ottergames.managers.GameManager;
+import org.antredesloutres.ottergames.utils.Constants;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -27,17 +28,17 @@ public class JoinListener implements Listener {
 
         if (spectator) {
             if (optedOut) {
-                statusMessage = Component.text("Tu es desinscrit des Ottergames: ", NamedTextColor.RED)
-                        .append(Component.text("mode spectateur neutre.", NamedTextColor.GRAY));
+                statusMessage = Component.text(Constants.JOIN_OPTED_OUT_PREFIX, NamedTextColor.RED)
+                        .append(Component.text(Constants.JOIN_OPTED_OUT_SUFFIX, NamedTextColor.GRAY));
             } else if (disconnectedDuringGame) {
-                statusMessage = Component.text("Tu passes en spectateur car ", NamedTextColor.RED)
-                        .append(Component.text("tu t'es deconnecte pendant la partie.", NamedTextColor.GRAY));
+                statusMessage = Component.text(Constants.JOIN_DISCONNECTED_PREFIX, NamedTextColor.RED)
+                        .append(Component.text(Constants.JOIN_DISCONNECTED_SUFFIX, NamedTextColor.GRAY));
             } else {
-                statusMessage = Component.text("Partie en cours: ", NamedTextColor.RED)
-                        .append(Component.text("mode spectateur jusqu'a la fin.", NamedTextColor.GRAY));
+                statusMessage = Component.text(Constants.JOIN_GAME_IN_PROGRESS_PREFIX, NamedTextColor.RED)
+                        .append(Component.text(Constants.JOIN_GAME_IN_PROGRESS_SUFFIX, NamedTextColor.GRAY));
             }
         } else {
-            statusMessage = Component.text("Tu es inscrit pour les Ottergames.", NamedTextColor.GREEN);
+            statusMessage = Component.text(Constants.JOIN_REGISTERED, NamedTextColor.GREEN);
         }
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> event.getPlayer().sendMessage(statusMessage), 1L);
