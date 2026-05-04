@@ -127,7 +127,7 @@ public class ArenaGameListener implements Listener {
         Location spawnLocation = gameManager.getPlayerSpawnLocation(playerId);
         if (arena == null || spawnLocation == null) return;
 
-        if (!arena.contains(event.getTo())) {
+        if (!gameManager.isPlayerSpectator(playerId) && !arena.contains(event.getTo())) {
             if (eliminateOnExit) {
                 // Eliminate the player
                 gameManager.eliminatePlayer(playerId);
@@ -142,7 +142,7 @@ public class ArenaGameListener implements Listener {
                 }
 
                 if (currentGame.restoreInventoryOnBoundsExit()) {
-                    currentGame.applyStartingInventory(player);
+                    currentGame.onGamePlayerSpawn(player);
                 }
             }
         }
@@ -251,7 +251,7 @@ public class ArenaGameListener implements Listener {
 
                             // Restore starting inventory if enabled
                             if (restoreInventory) {
-                                currentGame.applyStartingInventory(player);
+                                currentGame.onGamePlayerSpawn(player);
                             }
                         }
                     }

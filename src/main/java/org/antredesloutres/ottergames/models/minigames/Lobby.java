@@ -69,7 +69,7 @@ public class Lobby implements Minigame {
     }
 
     @Override
-    public void applyStartingInventory(Player player) {
+    public void onGamePlayerSpawn(Player player) {
         // Clear inventory in the lobby.
         PlayerUtils.clearInventory(player);
     }

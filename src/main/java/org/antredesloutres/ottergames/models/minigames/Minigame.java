@@ -90,17 +90,17 @@ public interface Minigame {
     default boolean eliminateOnDeath() { return false; }
 
     // ──────────────────────────────────────────────
-    //  Starting inventory
+    //  Player spawn and respawn events
     // ──────────────────────────────────────────────
     /**
-     * Applies the starting inventory and equipment to a player.
-     * Override this to give items, armor, effects, etc. at the start of the game.
-     * Called once when the game starts and optionally on respawn / bounds exit.
-     * The default implementation does nothing (players keep whatever they had).
-     *
-     * @param player The player to equip.
+     * Called when a player spawns for the first time at the start of the game or when they respawn after death.
      */
-    default void applyStartingInventory(Player player) {}
+    default void onGamePlayerSpawn(Player player) {}
+
+    /**
+     * Called when a player spawns as a spectator (either by elimination or by joining mid-game).
+     */
+    default void onGameSpectatorSpawn(Player player) {}
 
     // ──────────────────────────────────────────────
     //  Conditions

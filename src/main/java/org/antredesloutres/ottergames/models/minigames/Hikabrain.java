@@ -189,7 +189,7 @@ public class Hikabrain implements Minigame {
     }
 
     @Override
-    public void applyStartingInventory(Player player) {
+    public void onGamePlayerSpawn(Player player) {
         player.setGameMode(org.bukkit.GameMode.SURVIVAL);
 
         player.getInventory().setItem(0, new ItemStack(Material.IRON_SWORD));
@@ -283,7 +283,7 @@ public class Hikabrain implements Minigame {
             for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
                 if (playerEntry.getValue().equals(entry.getKey())) {
                     Player p = Bukkit.getPlayer(playerEntry.getKey());
-                    if (p != null) {
+                    if (p != null && !gameManager.isPlayerSpectator(playerEntry.getKey())) {
                         String team = playerTeams.get(playerEntry.getKey());
                         if (TEAM_1.equals(team)) team1Players.add(p);
                         else if (TEAM_2.equals(team)) team2Players.add(p);
@@ -324,6 +324,7 @@ public class Hikabrain implements Minigame {
         String team = playerTeams.get(playerId);
 
         if (arena == null || team == null) return;
+        if (gameManager.isPlayerSpectator(playerId)) return;
 
         boolean scored = false;
         if (team.equals(TEAM_1) && GOAL_TEAM_2.contains(arena, event.getTo())) {
@@ -352,7 +353,9 @@ public class Hikabrain implements Minigame {
                         Location spawn = gameManager.getPlayerSpawnLocation(p.getUniqueId());
                         if (spawn != null) {
                             p.teleport(spawn);
-                            applyStartingInventory(p);
+                            if (!gameManager.isPlayerSpectator(p.getUniqueId())) {
+                                onGamePlayerSpawn(p);
+                            }
                             p.playSound(p, Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
                         }
                     }

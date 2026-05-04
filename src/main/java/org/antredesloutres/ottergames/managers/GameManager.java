@@ -263,10 +263,12 @@ public class GameManager {
         // Apply starting inventories after onStart (allows minigames to initialize teams/data first)
         for (UUID playerId : playerArenaAssignments.keySet()) {
             Player player = Bukkit.getPlayer(playerId);
-            if (player != null && player.isOnline()) {
-                currentGame.applyStartingInventory(player);
+            if (player != null && player.isOnline() && !participantManager.isPlayerSpectator(playerId)) {
+                currentGame.onGamePlayerSpawn(player);
             }
         }
+
+        teleportSpectatorsToArena();
 
         // Register minigame events if it implements Listener
         if (currentGame instanceof org.bukkit.event.Listener listener) {
@@ -337,7 +339,11 @@ public class GameManager {
             player.teleport(spawn);
             boolean isSpectator = participantManager.isPlayerSpectator(player.getUniqueId());
             resetForLobby(player, isSpectator ? GameMode.SPECTATOR : GameMode.ADVENTURE);
-            lobbyGame.applyStartingInventory(player);
+            if (isSpectator) {
+                lobbyGame.onGameSpectatorSpawn(player);
+            } else {
+                lobbyGame.onGamePlayerSpawn(player);
+            }
         }
     }
 
@@ -401,6 +407,24 @@ public class GameManager {
         int spectatorCount = participantManager.getSpectatorParticipantCount();
         int totalParticipantCount = activeParticipantCount + spectatorCount;
         return new GameSelectionContext(roundNumber, activeParticipantCount, spectatorCount, totalParticipantCount);
+    }
+
+    private void teleportSpectatorsToArena() {
+        if (currentArenas.isEmpty()) return;
+        ArenaInstance arena = currentArenas.getFirst();
+
+        for (GamePlayer spec : participantManager.getSpectatorParticipants()) {
+            Player player = Bukkit.getPlayer(spec.getUuid());
+            if (player == null || !player.isOnline()) continue;
+
+            Location spawn = currentGame.getSpawnZone(arena).randomLocation(arena, random);
+            if (spawn.getWorld() == null) continue;
+            playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
+            playerArenaAssignments.put(player.getUniqueId(), arena);
+            player.teleport(spawn);
+            player.setGameMode(GameMode.SPECTATOR);
+            currentGame.onGameSpectatorSpawn(player);
+        }
     }
 
     private void teleportActiveParticipantsToArenas() {
@@ -522,6 +546,10 @@ public class GameManager {
 
     public boolean eliminatePlayer(UUID playerId) {
         return participantManager.eliminatePlayer(playerId);
+    }
+
+    public boolean isPlayerSpectator(UUID playerId) {
+        return participantManager.isPlayerSpectator(playerId);
     }
 
     private void clearAllParticipantsInventories() {
