@@ -144,4 +144,5 @@ public final class Constants {
     public static final String STRUCTURE_HIKABRAIN = "ottergames_hikabrain_map";
     public static final String STRUCTURE_SPLEEF    = "spleef/ottergames_spleef_single_floor";
     public static final String STRUCTURE_LOBBY     = "ottergames_lobby";
+    public static final String STRUCTURE_CLUTCH    = "clutch";
 }

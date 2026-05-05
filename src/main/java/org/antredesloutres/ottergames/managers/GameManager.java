@@ -70,6 +70,7 @@ public class GameManager {
         this.games.add(new Dropper());
         this.games.add(new Spleef(plugin));
         this.games.add(new Hikabrain(plugin));
+        this.games.add(new Clutch(plugin));
     }
 
     public ConfigManager getConfigManager() {
