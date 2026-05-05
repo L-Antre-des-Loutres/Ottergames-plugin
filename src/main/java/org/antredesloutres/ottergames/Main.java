@@ -28,4 +28,8 @@ public final class Main extends JavaPlugin {
         getLogger().info(Constants.LOGGER_PLUGIN_DISABLED);
     }
 
+    public GameManager getGameManager() {
+        return gameManager;
+    }
+
 }
