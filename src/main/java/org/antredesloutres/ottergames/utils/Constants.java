@@ -108,6 +108,15 @@ public final class Constants {
     public static final String DROPPER_OTHER_REACHED    = "§a%s §6reached the bottom!";
 
     // ──────────────────────────────────────────────
+    //  Minigames - Clutch
+    // ──────────────────────────────────────────────
+    public static final String CLUTCH_START_MESSAGE    = "§6[Clutch] §eSurvive the fall! §7Height: %d blocks.";
+    public static final String CLUTCH_ITEM_MESSAGE     = "§aSurvival is victory! Clutch with: §b%s";
+    public static final String CLUTCH_VICTORY_MESSAGE  = "§aVictory! You survived the clutch.";
+    public static final String CLUTCH_VICTORY_TITLE    = "VICTORY!";
+    public static final String CLUTCH_VICTORY_SUBTITLE = "You survived the fall";
+
+    // ──────────────────────────────────────────────
     //  Participant
     // ──────────────────────────────────────────────
     public static final String PARTICIPANT_NO_UUID     = "UUID cannot be null";

@@ -96,7 +96,7 @@ public class Clutch implements Minigame {
     public void onStart(List<ArenaInstance> arenas, GameManager gameManager) {
         int round = gameManager.getCurrentRound();
         int fallHeight = INITIAL_FALL_HEIGHT + (round * HEIGHT_INCREASE_PER_ROUND);
-        Bukkit.broadcastMessage(String.format("§6[Clutch] §eSurvive the fall! §7Height: %d blocks.", fallHeight));
+        Bukkit.broadcastMessage(String.format(Constants.CLUTCH_START_MESSAGE, fallHeight));
     }
 
     @Override
@@ -106,7 +106,7 @@ public class Clutch implements Minigame {
 
         PlayerUtils.clearInventory(player);
         player.getInventory().setItem(0, new ItemStack(clutchItem, 1));
-        player.sendMessage("§aSurvival is victory! Clutch with: §b" + clutchItem.name().replace("_", " "));
+        player.sendMessage(String.format(Constants.CLUTCH_ITEM_MESSAGE, clutchItem.name().replace("_", " ")));
         
         player.setGameMode(GameMode.SURVIVAL);
     }
@@ -117,11 +117,11 @@ public class Clutch implements Minigame {
             Player player = Bukkit.getPlayer(gp.getUuid());
             if (player != null && player.isOnline() && player.getGameMode() != GameMode.SPECTATOR) {
                 // If the player is still alive and not a spectator, they won!
-                player.sendMessage("§aVictory! You survived the clutch.");
+                player.sendMessage(Constants.CLUTCH_VICTORY_MESSAGE);
                 player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
                 player.showTitle(Title.title(
-                        Component.text("VICTORY!", NamedTextColor.GOLD),
-                        Component.text("You survived the fall", NamedTextColor.YELLOW),
+                        Component.text(Constants.CLUTCH_VICTORY_TITLE, NamedTextColor.GOLD),
+                        Component.text(Constants.CLUTCH_VICTORY_SUBTITLE, NamedTextColor.YELLOW),
                         Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(2), Duration.ofMillis(500))
                 ));
             } else {
