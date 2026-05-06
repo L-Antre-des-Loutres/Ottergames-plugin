@@ -71,6 +71,7 @@ public class GameManager {
         this.games.add(new Spleef(plugin));
         this.games.add(new Hikabrain(plugin));
         this.games.add(new Clutch(plugin));
+        this.games.add(new AnvilGame(plugin));
     }
 
     public ConfigManager getConfigManager() {
@@ -379,6 +380,9 @@ public class GameManager {
         player.setGameMode(gameMode);
         player.setInvulnerable(false);
         player.setAbsorptionAmount(0);
+        player.setAllowFlight(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
+        player.setFlying(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
+        player.setCollidable(true);
         healPlayer(player);
     }
 

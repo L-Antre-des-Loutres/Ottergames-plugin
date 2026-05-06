@@ -117,6 +117,14 @@ public final class Constants {
     public static final String CLUTCH_VICTORY_SUBTITLE = "You survived the fall";
 
     // ──────────────────────────────────────────────
+    //  Minigames - Anvil
+    // ──────────────────────────────────────────────
+    public static final String ANVIL_START_MESSAGE    = "§6[Anvil] §eWatch out! Anvils are falling from the sky! §7Survive until the end.";
+    public static final String ANVIL_VICTORY_MESSAGE  = "§aVictory! You survived the anvil rain.";
+    public static final String ANVIL_VICTORY_TITLE    = "VICTORY!";
+    public static final String ANVIL_VICTORY_SUBTITLE = "You dodged them all!";
+
+    // ──────────────────────────────────────────────
     //  Participant
     // ──────────────────────────────────────────────
     public static final String PARTICIPANT_NO_UUID     = "UUID cannot be null";

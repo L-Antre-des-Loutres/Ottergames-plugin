@@ -240,8 +240,16 @@ public class ArenaGameListener implements Listener {
                         if (eliminate) {
                             // Eliminate: set as spectator
                             gameManager.eliminatePlayer(playerId);
-                            player.setGameMode(GameMode.SPECTATOR);
                             player.sendMessage(Constants.ARENA_ELIMINATED_DEATH);
+
+                            // Teleport to spectator zone and apply minigame custom spectator setup
+                            ArenaInstance arena = gameManager.getPlayerArena(playerId);
+                            if (arena != null) {
+                                Location specSpawn = currentGame.getSpawnZone(arena).randomLocation(arena, new java.util.Random());
+                                player.teleport(specSpawn);
+                            }
+                            player.setGameMode(GameMode.SPECTATOR); // Default, can be overridden by onGameSpectatorSpawn
+                            currentGame.onGameSpectatorSpawn(player);
                         } else {
                             // Re-randomize spawn on each death and teleport there
                             Location newSpawn = gameManager.rerandomizePlayerSpawn(playerId);
