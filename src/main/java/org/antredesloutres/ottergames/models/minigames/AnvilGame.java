@@ -143,7 +143,7 @@ public class AnvilGame implements Minigame, Listener {
         for (int i = 0; i < count; i++) {
             int relX = anvilSpawnRegion.minX() + random.nextInt(anvilSpawnRegion.maxX() - anvilSpawnRegion.minX() + 1);
             int relZ = anvilSpawnRegion.minZ() + random.nextInt(anvilSpawnRegion.maxZ() - anvilSpawnRegion.minZ() + 1);
-            int relY = Constants.ANVIL_FALL_HEIGHT;
+            int relY = anvilSpawnRegion.maxY(); // Dynamically use the top of the structure
 
             Location spawnLoc = arena.origin().clone().add(relX, relY, relZ);
 
