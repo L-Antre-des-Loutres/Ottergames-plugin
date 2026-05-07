@@ -112,10 +112,87 @@ public class AnvilGame implements Minigame, Listener {
 
     @Override
     public void onStart(List<ArenaInstance> arenas, GameManager gameManager) {
+        Bukkit.broadcastMessage(Constants.ANVIL_START_MESSAGE);
+
+        spawnTask = new BukkitRunnable() {
+            int ticks = 0;
+            int spawnInterval = Constants.ANVIL_INITIAL_SPAWN_TICKS;
+
+            @Override
+            public void run() {
+                if (ticks % spawnInterval == 0) {
+                    for (ArenaInstance arena : arenas) {
+                        spawnAnvils(arena);
+                    }
+                }
+
+                // Increase difficulty: decrease spawn interval every 5 seconds (100 ticks)
+                if (ticks > 0 && ticks % 100 == 0 && spawnInterval > Constants.ANVIL_MIN_SPAWN_TICKS) {
+                    spawnInterval--;
+                }
+
+                ticks++;
+            }
+        }.runTaskTimer(plugin, 20L, 1L); // Start after 1 second
+    }
+
+    private void spawnAnvils(ArenaInstance arena) {
+        // Spawn 1 to 3 anvils per arena per interval
+        int count = 1 + random.nextInt(3);
+
+        for (int i = 0; i < count; i++) {
+            int relX = anvilSpawnRegion.minX() + random.nextInt(anvilSpawnRegion.maxX() - anvilSpawnRegion.minX() + 1);
+            int relZ = anvilSpawnRegion.minZ() + random.nextInt(anvilSpawnRegion.maxZ() - anvilSpawnRegion.minZ() + 1);
+            int relY = Constants.ANVIL_FALL_HEIGHT;
+
+            Location spawnLoc = arena.origin().clone().add(relX, relY, relZ);
+
+            FallingBlock anvil = spawnLoc.getWorld().spawnFallingBlock(spawnLoc, Bukkit.createBlockData(Material.ANVIL));
+            anvil.setHurtEntities(true);
+            anvil.setDamagePerBlock(Constants.ANVIL_DAMAGE_PER_BLOCK);
+            anvil.setMaxDamage(Constants.ANVIL_MAX_DAMAGE);
+            anvil.setDropItem(false);
+        }
     }
 
     @Override
     public void onEnd(GameManager gameManager) {
+        if (spawnTask != null) {
+            spawnTask.cancel();
+            spawnTask = null;
+        }
+
+        // Unregister this listener to avoid duplicate registrations in next rounds
+        org.bukkit.event.HandlerList.unregisterAll(this);
+
+        // Success message for survivors
+        var title = Title.title(
+                Component.text(Constants.ANVIL_VICTORY_TITLE, NamedTextColor.GOLD),
+                Component.text(Constants.ANVIL_VICTORY_SUBTITLE, NamedTextColor.YELLOW),
+                Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(3), Duration.ofMillis(500))
+        );
+
+        for (GamePlayer gamePlayer : gameManager.getActiveParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                player.showTitle(title);
+                player.sendMessage(Constants.ANVIL_VICTORY_MESSAGE);
+                player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.2f);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        if (!(event.getEntity() instanceof FallingBlock fallingBlock)) return;
+        if (fallingBlock.getBlockData().getMaterial() != Material.ANVIL) return;
+
+        // Prevent anvil from becoming a block
+        event.setCancelled(true);
+        fallingBlock.remove();
+
+        // Play landing sound
+        event.getBlock().getWorld().playSound(event.getBlock().getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5f, 1.0f);
     }
 
     @Override
@@ -127,10 +204,11 @@ public class AnvilGame implements Minigame, Listener {
         player.removePotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY);
     }
 
-    @Override
-    public void onPlayerMove(org.bukkit.event.player.PlayerMoveEvent event, GameManager gameManager) {
-    }
 
+    @Override
+    public boolean keepPlayersInBounds() {
+        return true;
+    }
 
     @Override
     public boolean pvpEnabled() {
