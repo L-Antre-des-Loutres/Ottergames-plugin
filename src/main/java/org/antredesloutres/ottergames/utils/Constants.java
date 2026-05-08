@@ -124,15 +124,6 @@ public final class Constants {
     public static final String ANVIL_VICTORY_TITLE    = "VICTORY!";
     public static final String ANVIL_VICTORY_SUBTITLE = "You dodged them all!";
 
-    public static final int ANVIL_GAME_DURATION_SECONDS = 30;
-    public static final int ANVIL_FALL_HEIGHT           = 30;
-    public static final int ANVIL_INITIAL_SPAWN_TICKS   = 10;
-    public static final int ANVIL_MIN_SPAWN_TICKS       = 2;
-    public static final long ANVIL_SPECTATOR_COOLDOWN   = 2000;
-    public static final float ANVIL_DAMAGE_PER_BLOCK    = 2.0f;
-    public static final int ANVIL_MAX_DAMAGE            = 40;
-    public static final int ANVIL_SPAWN_ZONE_SIZE       = 24;
-
     // ──────────────────────────────────────────────
     //  Participant
     // ──────────────────────────────────────────────

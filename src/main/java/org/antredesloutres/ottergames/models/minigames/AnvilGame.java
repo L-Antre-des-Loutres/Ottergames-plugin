@@ -20,10 +20,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -37,11 +33,25 @@ import java.util.*;
  */
 public class AnvilGame implements Minigame, Listener {
 
+    // Game constants (Parameters stay here)
+    private static final int GAME_DURATION_SECONDS = 30;
+    private static final int SPAWN_ZONE_SIZE = 24;
+    private static final int INITIAL_SPAWN_TICKS = 10;
+    private static final int MIN_SPAWN_TICKS = 2;
+    private static final int DIFFICULTY_INCREASE_INTERVAL_TICKS = 100;
+    private static final long SPAWN_TASK_DELAY_TICKS = 20L;
+    private static final long SPAWN_TASK_PERIOD_TICKS = 1L;
+
+    // Anvil properties
+    private static final float DAMAGE_PER_BLOCK = 2.0f;
+    private static final int MAX_DAMAGE = 40;
+    private static final int MIN_ANVILS_PER_SPAWN = 1;
+    private static final int EXTRA_ANVILS_PER_SPAWN = 3; // 1 to 3 anvils total
+
     private final Main plugin;
     private final MinigameArena structure;
     private final Random random = new Random();
     private BukkitTask spawnTask;
-    private final Map<UUID, Long> spectatorCooldowns = new HashMap<>();
     private final ArenaRegion anvilSpawnRegion;
 
     public AnvilGame(Main plugin) {
@@ -56,7 +66,7 @@ public class AnvilGame implements Minigame, Listener {
         var size = struct.getSize();
         int centerX = size.getBlockX() / 2;
         int centerZ = size.getBlockZ() / 2;
-        int halfAnvilZone = Constants.ANVIL_SPAWN_ZONE_SIZE / 2;
+        int halfAnvilZone = SPAWN_ZONE_SIZE / 2;
 
         // Define the anvil spawn area (Region)
         this.anvilSpawnRegion = new ArenaRegion(
@@ -92,7 +102,7 @@ public class AnvilGame implements Minigame, Listener {
 
     @Override
     public int getDurationSeconds() {
-        return Constants.ANVIL_GAME_DURATION_SECONDS;
+        return GAME_DURATION_SECONDS;
     }
 
     @Override
@@ -116,7 +126,7 @@ public class AnvilGame implements Minigame, Listener {
 
         spawnTask = new BukkitRunnable() {
             int ticks = 0;
-            int spawnInterval = Constants.ANVIL_INITIAL_SPAWN_TICKS;
+            int spawnInterval = INITIAL_SPAWN_TICKS;
 
             @Override
             public void run() {
@@ -126,31 +136,31 @@ public class AnvilGame implements Minigame, Listener {
                     }
                 }
 
-                // Increase difficulty: decrease spawn interval every 5 seconds (100 ticks)
-                if (ticks > 0 && ticks % 100 == 0 && spawnInterval > Constants.ANVIL_MIN_SPAWN_TICKS) {
+                // Increase difficulty: decrease spawn interval every few seconds
+                if (ticks > 0 && ticks % DIFFICULTY_INCREASE_INTERVAL_TICKS == 0 && spawnInterval > MIN_SPAWN_TICKS) {
                     spawnInterval--;
                 }
 
                 ticks++;
             }
-        }.runTaskTimer(plugin, 20L, 1L); // Start after 1 second
+        }.runTaskTimer(plugin, SPAWN_TASK_DELAY_TICKS, SPAWN_TASK_PERIOD_TICKS);
     }
 
     private void spawnAnvils(ArenaInstance arena) {
-        // Spawn 1 to 3 anvils per arena per interval
-        int count = 1 + random.nextInt(3);
+        // Spawn a random number of anvils per arena per interval
+        int count = MIN_ANVILS_PER_SPAWN + random.nextInt(EXTRA_ANVILS_PER_SPAWN);
 
         for (int i = 0; i < count; i++) {
             int relX = anvilSpawnRegion.minX() + random.nextInt(anvilSpawnRegion.maxX() - anvilSpawnRegion.minX() + 1);
             int relZ = anvilSpawnRegion.minZ() + random.nextInt(anvilSpawnRegion.maxZ() - anvilSpawnRegion.minZ() + 1);
-            int relY = anvilSpawnRegion.maxY(); // Dynamically use the top of the structure
+            int relY = anvilSpawnRegion.maxY() - 9; // Dynamically use the top of the structure
 
             Location spawnLoc = arena.origin().clone().add(relX, relY, relZ);
 
             FallingBlock anvil = spawnLoc.getWorld().spawnFallingBlock(spawnLoc, Bukkit.createBlockData(Material.ANVIL));
             anvil.setHurtEntities(true);
-            anvil.setDamagePerBlock(Constants.ANVIL_DAMAGE_PER_BLOCK);
-            anvil.setMaxDamage(Constants.ANVIL_MAX_DAMAGE);
+            anvil.setDamagePerBlock(DAMAGE_PER_BLOCK);
+            anvil.setMaxDamage(MAX_DAMAGE);
             anvil.setDropItem(false);
         }
     }
