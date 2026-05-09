@@ -27,6 +27,12 @@ public interface Minigame {
     default Location getSpawnLocation(ArenaInstance arena, Random random, int playerIndexInArena, int playersInArena) {
         return getSpawnZone(arena).randomLocation(arena, random);
     }
+    /**
+     * Returns the location where a spectator should spawn in the given arena.
+     */
+    default Location getSpectatorSpawnLocation(ArenaInstance arena, Random random) {
+        return getSpawnZone(arena).randomLocation(arena, random);
+    }
     // Called on each respawn. Override when respawn logic differs from initial spawn (e.g. team-based games).
     default Location getRespawnLocation(UUID playerId, ArenaInstance arena, Random random) {
         return getSpawnLocation(arena, random, 0, 1);

@@ -19,7 +19,11 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -47,11 +51,17 @@ public class AnvilGame implements Minigame, Listener {
     private static final int MAX_DAMAGE = 40;
     private static final int MIN_ANVILS_PER_SPAWN = 1;
     private static final int EXTRA_ANVILS_PER_SPAWN = 3; // 1 to 3 anvils total
+    private static final int ANVIL_SPAWN_Y_OFFSET = -20; // Offset from structure top
+
+    // Spectator item
+    private static final long SPECTATOR_COOLDOWN_MS = 2000;
+    private static final String SPECTATOR_ITEM_NAME = "§cSpawn Anvil!";
 
     private final Main plugin;
     private final MinigameArena structure;
     private final Random random = new Random();
     private BukkitTask spawnTask;
+    private final Map<UUID, Long> spectatorCooldowns = new HashMap<>();
     private final ArenaRegion anvilSpawnRegion;
 
     public AnvilGame(Main plugin) {
@@ -153,16 +163,19 @@ public class AnvilGame implements Minigame, Listener {
         for (int i = 0; i < count; i++) {
             int relX = anvilSpawnRegion.minX() + random.nextInt(anvilSpawnRegion.maxX() - anvilSpawnRegion.minX() + 1);
             int relZ = anvilSpawnRegion.minZ() + random.nextInt(anvilSpawnRegion.maxZ() - anvilSpawnRegion.minZ() + 1);
-            int relY = anvilSpawnRegion.maxY() - 9; // Dynamically use the top of the structure
+            int relY = anvilSpawnRegion.maxY() + ANVIL_SPAWN_Y_OFFSET; // Use the top of the structure with offset
 
             Location spawnLoc = arena.origin().clone().add(relX, relY, relZ);
-
-            FallingBlock anvil = spawnLoc.getWorld().spawnFallingBlock(spawnLoc, Bukkit.createBlockData(Material.ANVIL));
-            anvil.setHurtEntities(true);
-            anvil.setDamagePerBlock(DAMAGE_PER_BLOCK);
-            anvil.setMaxDamage(MAX_DAMAGE);
-            anvil.setDropItem(false);
+            spawnSingleAnvil(spawnLoc);
         }
+    }
+
+    private void spawnSingleAnvil(Location location) {
+        FallingBlock anvil = location.getWorld().spawnFallingBlock(location, Bukkit.createBlockData(Material.ANVIL));
+        anvil.setHurtEntities(true);
+        anvil.setDamagePerBlock(DAMAGE_PER_BLOCK);
+        anvil.setMaxDamage(MAX_DAMAGE);
+        anvil.setDropItem(false);
     }
 
     @Override
@@ -205,13 +218,81 @@ public class AnvilGame implements Minigame, Listener {
         event.getBlock().getWorld().playSound(event.getBlock().getLocation(), Sound.BLOCK_ANVIL_LAND, 0.5f, 1.0f);
     }
 
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+
+        if (item == null || item.getType() != Material.ANVIL) return;
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !SPECTATOR_ITEM_NAME.equals(meta.getDisplayName())) return;
+
+        event.setCancelled(true);
+
+        // Cooldown check
+        long now = System.currentTimeMillis();
+        if (spectatorCooldowns.getOrDefault(player.getUniqueId(), 0L) > now) {
+            return;
+        }
+
+        // Find the arena the player is in
+        GameManager gm = plugin.getGameManager();
+        ArenaInstance arena = gm.getArenaAt(player.getLocation());
+        if (arena == null) return;
+
+        // Spawn anvil above the player (at the same height as normal ones)
+        Location finalSpawnLoc = arena.origin().clone().add(
+                player.getLocation().getX() - arena.origin().getX(),
+                anvilSpawnRegion.maxY() + ANVIL_SPAWN_Y_OFFSET,
+                player.getLocation().getZ() - arena.origin().getZ()
+        );
+
+        spawnSingleAnvil(finalSpawnLoc);
+        spectatorCooldowns.put(player.getUniqueId(), now + SPECTATOR_COOLDOWN_MS);
+        player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 0.5f, 1.5f);
+    }
+
     @Override
     public void onGamePlayerSpawn(Player player) {
         PlayerUtils.clearInventory(player);
         player.setGameMode(GameMode.ADVENTURE);
         player.setInvulnerable(false);
         player.setCollidable(true);
+        player.setAllowFlight(false);
+        player.setFlying(false);
         player.removePotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY);
+    }
+
+    @Override
+    public void onGameSpectatorSpawn(Player player) {
+        PlayerUtils.clearInventory(player);
+        player.setGameMode(GameMode.ADVENTURE);
+        player.setInvulnerable(true);
+        player.setCollidable(false);
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
+
+        // Give the spectator anvil item
+        ItemStack anvilItem = new ItemStack(Material.ANVIL);
+        ItemMeta meta = anvilItem.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(SPECTATOR_ITEM_NAME);
+            anvilItem.setItemMeta(meta);
+        }
+        player.getInventory().setItem(4, anvilItem);
+    }
+
+    @Override
+    public Location getSpectatorSpawnLocation(ArenaInstance arena, Random random) {
+        // Spawn at center, 2 blocks above anvil spawn height
+        return arena.origin().clone().add(
+                arena.size().getBlockX() / 2.0,
+                anvilSpawnRegion.maxY() + ANVIL_SPAWN_Y_OFFSET + 2,
+                arena.size().getBlockZ() / 2.0
+        );
     }
 
 

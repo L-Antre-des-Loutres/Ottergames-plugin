@@ -349,12 +349,13 @@ public class GameManager {
             Player player = Bukkit.getPlayer(gamePlayer.getUuid());
             if (player == null || !player.isOnline()) continue;
 
-            Location spawn = lobbyGame.getSpawnLocation(lobby, random, i, players.size());
+            boolean isSpectator = participantManager.isPlayerSpectator(player.getUniqueId());
+            Location spawn = isSpectator ? lobbyGame.getSpectatorSpawnLocation(lobby, random) : lobbyGame.getSpawnLocation(lobby, random, i, players.size());
+            
             playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
             playerArenaAssignments.put(player.getUniqueId(), lobby);
             player.teleport(spawn);
-            boolean isSpectator = participantManager.isPlayerSpectator(player.getUniqueId());
-            resetForLobby(player, isSpectator ? GameMode.SPECTATOR : GameMode.ADVENTURE);
+            resetForLobby(player, GameMode.ADVENTURE);
             if (isSpectator) {
                 lobbyGame.onGameSpectatorSpawn(player);
             } else {
@@ -459,12 +460,11 @@ public class GameManager {
             Player player = Bukkit.getPlayer(spec.getUuid());
             if (player == null || !player.isOnline()) continue;
 
-            Location spawn = currentGame.getSpawnZone(arena).randomLocation(arena, random);
+            Location spawn = currentGame.getSpectatorSpawnLocation(arena, random);
             if (spawn.getWorld() == null) continue;
             playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
             playerArenaAssignments.put(player.getUniqueId(), arena);
             player.teleport(spawn);
-            player.setGameMode(GameMode.SPECTATOR);
             currentGame.onGameSpectatorSpawn(player);
         }
     }
