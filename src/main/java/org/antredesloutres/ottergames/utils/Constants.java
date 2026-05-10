@@ -117,6 +117,16 @@ public final class Constants {
     public static final String CLUTCH_VICTORY_SUBTITLE = "You survived the fall";
 
     // ──────────────────────────────────────────────
+    //  Minigames - Anvil
+    // ──────────────────────────────────────────────
+    public static final String ANVIL_START_MESSAGE    = "§6[Anvil] §eWatch out! Anvils are falling from the sky! §7Survive until the end.";
+    public static final String ANVIL_VICTORY_MESSAGE  = "§aVictory! You survived the anvil rain.";
+    public static final String ANVIL_VICTORY_TITLE    = "VICTORY!";
+    public static final String ANVIL_VICTORY_SUBTITLE = "You dodged them all!";
+    public static final String ANVIL_SPECTATOR_RESTRICTION = "§cYou can only spawn anvils within the play area!";
+    public static final String ANVIL_SPECTATOR_ITEM_NAME = "§cSpawn Anvil!";
+
+    // ──────────────────────────────────────────────
     //  Participant
     // ──────────────────────────────────────────────
     public static final String PARTICIPANT_NO_UUID     = "UUID cannot be null";
@@ -152,6 +162,7 @@ public final class Constants {
     public static final String STRUCTURE_DROPPER   = "dropper/ottergames_dropper_warden";
     public static final String STRUCTURE_HIKABRAIN = "ottergames_hikabrain_map";
     public static final String STRUCTURE_SPLEEF    = "spleef/ottergames_spleef_single_floor";
-    public static final String STRUCTURE_LOBBY     = "ottergames_lobby";
-    public static final String STRUCTURE_CLUTCH    = "clutch";
+    public static final String STRUCTURE_LOBBY      = "ottergames_lobby";
+    public static final String STRUCTURE_CLUTCH     = "clutch";
+    public static final String STRUCTURE_ANVIL_GAME = "anvil_game";
 }

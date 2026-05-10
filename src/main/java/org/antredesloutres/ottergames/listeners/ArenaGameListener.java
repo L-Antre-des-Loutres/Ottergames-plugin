@@ -131,10 +131,14 @@ public class ArenaGameListener implements Listener {
             if (eliminateOnExit) {
                 // Eliminate the player
                 gameManager.eliminatePlayer(playerId);
-                player.setGameMode(org.bukkit.GameMode.SPECTATOR);
                 player.sendMessage(Constants.ARENA_ELIMINATED_BOUNDS);
-            } else {
-                // Just teleport them back and handle optional heal/restore
+
+                // Teleport to spectator location
+                Location specSpawn = currentGame.getSpectatorSpawnLocation(arena, new java.util.Random());
+                player.teleport(specSpawn);
+
+                currentGame.onGameSpectatorSpawn(player);
+            } else {                // Just teleport them back and handle optional heal/restore
                 player.teleport(spawnLocation);
 
                 if (currentGame.healOnBoundsExit()) {
@@ -240,8 +244,15 @@ public class ArenaGameListener implements Listener {
                         if (eliminate) {
                             // Eliminate: set as spectator
                             gameManager.eliminatePlayer(playerId);
-                            player.setGameMode(GameMode.SPECTATOR);
                             player.sendMessage(Constants.ARENA_ELIMINATED_DEATH);
+
+                            // Teleport to spectator zone and apply minigame custom spectator setup
+                            ArenaInstance arena = gameManager.getPlayerArena(playerId);
+                            if (arena != null) {
+                                Location specSpawn = currentGame.getSpectatorSpawnLocation(arena, new java.util.Random());
+                                player.teleport(specSpawn);
+                            }
+                            currentGame.onGameSpectatorSpawn(player);
                         } else {
                             // Re-randomize spawn on each death and teleport there
                             Location newSpawn = gameManager.rerandomizePlayerSpawn(playerId);
