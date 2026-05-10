@@ -54,6 +54,8 @@ public class GameManager {
     private List<ArenaInstance> nextArenas = Collections.emptyList();
     private final Map<UUID, Location> playerSpawnLocations = new HashMap<>();
     private final Map<UUID, ArenaInstance> playerArenaAssignments = new HashMap<>();
+    private final Map<UUID, Integer> playerLives = new HashMap<>();
+    private Set<UUID> roundStartActivePlayers = new HashSet<>();
     private int timer;
     private int maxTimer;
     private int startCountdownSecondsRemaining;
@@ -95,6 +97,7 @@ public class GameManager {
         }
 
         participantManager.registerOnlinePlayersAsParticipants();
+        initializeLives();
         GameSelectionContext initialSelectionContext = buildSelectionContext(1);
         if (getSelectableGames(initialSelectionContext).isEmpty()) {
             plugin.getLogger().warning(String.format(Constants.LOGGER_NO_GAME_ROUND_START,
@@ -189,6 +192,8 @@ public class GameManager {
         this.startCountdownSecondsRemaining = 0;
         this.currentRound = 0;
         this.running = false;
+        playerLives.clear();
+        roundStartActivePlayers.clear();
         participantManager.clearAll();
         participantManager.registerOnlinePlayersAsParticipants();
         plugin.getLogger().info(Constants.LOGGER_LOOP_STOPPED);
@@ -249,6 +254,35 @@ public class GameManager {
         updateScoreboard();
     }
 
+    private void initializeLives() {
+        int maxLives = configManager.getGameConfig().getMaxLives();
+        playerLives.clear();
+        for (GamePlayer gp : participantManager.getParticipants()) {
+            playerLives.put(gp.getUuid(), maxLives);
+        }
+    }
+
+    private void applyLivesAndRecordSurvival() {
+        for (UUID playerId : roundStartActivePlayers) {
+            if (!participantManager.isPlayerSpectator(playerId)) {
+                scoreboardManager.recordSurvivedGame(playerId);
+            } else {
+                int remaining = playerLives.merge(playerId, -1, Integer::sum);
+                if (remaining > 0) {
+                    Player player = Bukkit.getPlayer(playerId);
+                    if (player != null && player.isOnline()) {
+                        participantManager.restoreAsActive(playerId);
+                    }
+                }
+            }
+        }
+        roundStartActivePlayers.clear();
+    }
+
+    public int getPlayerLives(UUID playerId) {
+        return playerLives.getOrDefault(playerId, 0);
+    }
+
     private void updateScoreboard() {
         int active = participantManager.getActiveParticipantCount();
         int total = active + participantManager.getSpectatorParticipantCount();
@@ -257,23 +291,12 @@ public class GameManager {
         for (GamePlayer gp : participantManager.getSpectatorParticipants()) {
             spectators.add(gp.getUuid());
         }
-        scoreboardManager.updateAll(active, total, completedGames, buildStatusLine(), currentGame.getName(), spectators);
-    }
-
-    private Component buildStatusLine() {
-        if (!isPaused) {
-            return Component.text(
-                String.format(Constants.SCOREBOARD_GAME_IN_PROGRESS, currentRound),
-                NamedTextColor.YELLOW
-            );
-        }
-        if (nextGame != null) {
-            return Component.text(
-                String.format(Constants.SCOREBOARD_NEXT_GAME, currentRound + 1, nextGame.getName()),
-                NamedTextColor.YELLOW
-            );
-        }
-        return Component.empty();
+        scoreboardManager.updateAll(
+            active, total, completedGames,
+            !isPaused, currentRound, nextGame != null ? nextGame.getName() : null,
+            currentGame.getName(), spectators, playerLives,
+            configManager.getGameConfig().getMaxLives()
+        );
     }
 
     private void updateXpBar(int current, int max) {
@@ -317,6 +340,11 @@ public class GameManager {
         isPaused = false;
         timer = currentGame.getDurationSeconds();
         maxTimer = timer;
+
+        roundStartActivePlayers = new HashSet<>();
+        for (GamePlayer gp : participantManager.getActiveParticipants()) {
+            roundStartActivePlayers.add(gp.getUuid());
+        }
 
         teleportActiveParticipantsToArenas();
         currentGame.onStart(currentArenas, this);
@@ -365,11 +393,8 @@ public class GameManager {
         String gameName = currentGame.getName();
         lastGame = currentGame;
 
-        for (GamePlayer survivor : participantManager.getActiveParticipants()) {
-            scoreboardManager.recordSurvivedGame(survivor.getUuid());
-        }
-
         currentGame.onEnd(this);
+        applyLivesAndRecordSurvival();
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
         playerSpawnLocations.clear();

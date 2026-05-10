@@ -149,6 +149,16 @@ public class GameParticipantManager {
         return true;
     }
 
+    public boolean restoreAsActive(UUID playerId) {
+        GamePlayer gamePlayer = participants.get(playerId);
+        if (gamePlayer == null || !gamePlayer.isSpectator()) {
+            return false;
+        }
+        participants.put(playerId, new GamePlayer(playerId, gamePlayer.username(), false));
+        disconnectedDuringGamePlayers.remove(playerId);
+        return true;
+    }
+
     public List<List<GamePlayer>> createActiveGroups(int groupSize) {
         return createActiveGroups(groupSize, true);
     }

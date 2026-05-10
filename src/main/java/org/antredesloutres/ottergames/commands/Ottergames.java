@@ -166,6 +166,7 @@ public class Ottergames implements TabExecutor {
                 String status = gm.getConfigManager().getGameConfig().isPreventSameGameConsecutively()
                         ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
                 sender.sendMessage(String.format(Constants.CONFIG_STATUS_LINE, status));
+                sender.sendMessage(String.format(Constants.CONFIG_LIVES_STATUS, gm.getConfigManager().getGameConfig().getMaxLives()));
             }
             case "preventconsecutive" -> {
                 if (args.length < 4) {
@@ -177,6 +178,26 @@ public class Ottergames implements TabExecutor {
                 gm.getConfigManager().save();
                 String statusLabel = prevent ? Constants.CONFIG_GAME_ENABLED : Constants.CONFIG_GAME_DISABLED;
                 sender.sendMessage(String.format(Constants.CONFIG_PREVENT_CONSECUTIVE_SET, statusLabel));
+            }
+            case "lives" -> {
+                if (args.length < 4) {
+                    sender.sendMessage(Constants.CONFIG_USAGE_LIVES);
+                    return;
+                }
+                int lives;
+                try {
+                    lives = Integer.parseInt(args[3]);
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(Constants.CONFIG_LIVES_INVALID);
+                    return;
+                }
+                if (lives < 1) {
+                    sender.sendMessage(Constants.CONFIG_LIVES_INVALID);
+                    return;
+                }
+                gm.getConfigManager().getGameConfig().setMaxLives(lives);
+                gm.getConfigManager().save();
+                sender.sendMessage(String.format(Constants.CONFIG_LIVES_SET, lives));
             }
             default -> sender.sendMessage(Constants.CONFIG_RULES_USAGE);
         }
@@ -201,7 +222,7 @@ public class Ottergames implements TabExecutor {
             if (args[1].equalsIgnoreCase("games")) {
                 StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "enable", "disable"), completions);
             } else if (args[1].equalsIgnoreCase("rules")) {
-                StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "preventConsecutive"), completions);
+                StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "preventConsecutive", "lives"), completions);
             }
         } else if (args.length == 4 && args[0].equalsIgnoreCase("config")) {
             if (args[1].equalsIgnoreCase("games") && (args[2].equalsIgnoreCase("enable") || args[2].equalsIgnoreCase("disable"))) {
@@ -210,6 +231,8 @@ public class Ottergames implements TabExecutor {
                 StringUtil.copyPartialMatches(args[3].toLowerCase(Locale.ROOT), gameNames, completions);
             } else if (args[1].equalsIgnoreCase("rules") && args[2].equalsIgnoreCase("preventConsecutive")) {
                 StringUtil.copyPartialMatches(args[3].toLowerCase(Locale.ROOT), List.of("true", "false"), completions);
+            } else if (args[1].equalsIgnoreCase("rules") && args[2].equalsIgnoreCase("lives")) {
+                StringUtil.copyPartialMatches(args[3].toLowerCase(Locale.ROOT), List.of("1", "2", "3", "5"), completions);
             }
         }
         return completions;

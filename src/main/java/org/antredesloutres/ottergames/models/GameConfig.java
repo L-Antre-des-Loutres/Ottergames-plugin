@@ -6,6 +6,7 @@ import java.util.Set;
 public class GameConfig {
     private Set<String> disabledGames = new HashSet<>();
     private boolean preventSameGameConsecutively = true;
+    private int maxLives = 3;
 
     public Set<String> getDisabledGames() {
         return disabledGames;
@@ -21,6 +22,14 @@ public class GameConfig {
 
     public void setPreventSameGameConsecutively(boolean preventSameGameConsecutively) {
         this.preventSameGameConsecutively = preventSameGameConsecutively;
+    }
+
+    public int getMaxLives() {
+        return maxLives;
+    }
+
+    public void setMaxLives(int maxLives) {
+        this.maxLives = maxLives;
     }
 
     public boolean isGameEnabled(String gameName) {
