@@ -345,11 +345,6 @@ public class GameManager {
     private void teleportToLobby() {
         if (lobbyArenas.isEmpty()) return;
         
-        // Clear lobby from any leftover entities
-        for (ArenaInstance lobby : lobbyArenas) {
-            lobby.clearEntities();
-        }
-
         ArenaInstance lobby = lobbyArenas.getFirst();
 
         List<GamePlayer> players = participantManager.getParticipants();
