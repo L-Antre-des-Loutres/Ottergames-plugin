@@ -185,7 +185,7 @@ public class GameManager {
         return running;
     }
 
-    public boolean handlePlayerJoin(Player player) {
+    public GameParticipantManager.JoinStatus handlePlayerJoin(Player player) {
         return participantManager.handlePlayerJoin(player, running);
     }
 

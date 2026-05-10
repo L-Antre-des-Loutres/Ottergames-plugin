@@ -21,17 +21,37 @@ public class GameParticipantManager {
     private final Random random = new Random();
 
     /**
-     * Called when a player connects. Every connected player is a participant.
-     * - If the player was already tracked as a spectator (eliminated or opted out), they stay spectator.
-     * - If the game is running and they were not tracked, they join as spectator.
-     * - Otherwise they join as an active participant.
+     * Represents the result of a player trying to join the game context.
      */
-    public boolean handlePlayerJoin(Player player, boolean gameRunning) {
+    public enum JoinStatus {
+        ADDED_ACTIVE,
+        RECONNECTED_SPECTATOR,
+        IGNORED_MID_GAME
+    }
+
+    /**
+     * Called when a player connects.
+     * - If the game is NOT running, they are added as active participants.
+     * - If the game is running:
+     *    - If they were already known (e.g. disconnected during game), they stay in their current state.
+     *    - If they were NOT known, they are IGNORED (not added to participants).
+     */
+    public JoinStatus handlePlayerJoin(Player player, boolean gameRunning) {
         UUID playerId = player.getUniqueId();
         GamePlayer existing = participants.get(playerId);
-        boolean isSpectator = (existing != null && existing.isSpectator()) || gameRunning;
-        participants.put(playerId, new GamePlayer(playerId, player.getName(), isSpectator));
-        return isSpectator;
+
+        if (!gameRunning) {
+            participants.put(playerId, new GamePlayer(playerId, player.getName(), false));
+            return JoinStatus.ADDED_ACTIVE;
+        }
+
+        if (existing != null) {
+            // Player was already part of the game, they just reconnected
+            return JoinStatus.RECONNECTED_SPECTATOR;
+        }
+
+        // Game is running and player is unknown: IGNORE them
+        return JoinStatus.IGNORED_MID_GAME;
     }
 
     /**

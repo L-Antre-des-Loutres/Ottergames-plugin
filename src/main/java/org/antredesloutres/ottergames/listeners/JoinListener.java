@@ -1,5 +1,6 @@
 package org.antredesloutres.ottergames.listeners;
 
+import org.antredesloutres.ottergames.managers.GameParticipantManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.utils.Constants;
@@ -21,23 +22,31 @@ public class JoinListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        boolean spectator = gameManager.handlePlayerJoin(event.getPlayer());
+        GameParticipantManager.JoinStatus status = gameManager.handlePlayerJoin(event.getPlayer());
         boolean disconnectedDuringGame = gameManager.isPlayerDisconnectedDuringGame(event.getPlayer().getUniqueId());
-        Component statusMessage;
+        
+        Component statusMessage = null;
 
-        if (spectator) {
-            if (disconnectedDuringGame) {
-                statusMessage = Component.text(Constants.JOIN_DISCONNECTED_PREFIX, NamedTextColor.RED)
-                        .append(Component.text(Constants.JOIN_DISCONNECTED_SUFFIX, NamedTextColor.GRAY));
-            } else {
-                statusMessage = Component.text(Constants.JOIN_GAME_IN_PROGRESS_PREFIX, NamedTextColor.RED)
-                        .append(Component.text(Constants.JOIN_GAME_IN_PROGRESS_SUFFIX, NamedTextColor.GRAY));
+        switch (status) {
+            case ADDED_ACTIVE -> statusMessage = Component.text(Constants.JOIN_REGISTERED, NamedTextColor.GREEN);
+            case RECONNECTED_SPECTATOR -> {
+                if (disconnectedDuringGame) {
+                    statusMessage = Component.text(Constants.JOIN_DISCONNECTED_PREFIX, NamedTextColor.RED)
+                            .append(Component.text(Constants.JOIN_DISCONNECTED_SUFFIX, NamedTextColor.GRAY));
+                } else {
+                    statusMessage = Component.text(Constants.JOIN_GAME_IN_PROGRESS_PREFIX, NamedTextColor.RED)
+                            .append(Component.text(Constants.JOIN_GAME_IN_PROGRESS_SUFFIX, NamedTextColor.GRAY));
+                }
             }
-        } else {
-            statusMessage = Component.text(Constants.JOIN_REGISTERED, NamedTextColor.GREEN);
+            case IGNORED_MID_GAME -> {
+                // Do nothing, player is ignored by Ottergames
+            }
         }
 
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> event.getPlayer().sendMessage(statusMessage), 1L);
+        if (statusMessage != null) {
+            Component finalMessage = statusMessage;
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> event.getPlayer().sendMessage(finalMessage), 1L);
+        }
     }
 
 }
