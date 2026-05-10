@@ -36,11 +36,13 @@ public class ConfigManager {
         List<String> disabled = config.getStringList("disabled-games");
         gameConfig.setDisabledGames(new HashSet<>(disabled));
         gameConfig.setPreventSameGameConsecutively(config.getBoolean("prevent-same-game-consecutively", true));
+        gameConfig.setMaxLives(config.getInt("max-lives", 3));
     }
 
     public void save() {
         config.set("disabled-games", List.copyOf(gameConfig.getDisabledGames()));
         config.set("prevent-same-game-consecutively", gameConfig.isPreventSameGameConsecutively());
+        config.set("max-lives", gameConfig.getMaxLives());
         try {
             config.save(configFile);
         } catch (IOException e) {

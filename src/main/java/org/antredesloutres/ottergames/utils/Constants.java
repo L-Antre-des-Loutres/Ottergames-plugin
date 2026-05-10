@@ -52,12 +52,13 @@ public final class Constants {
     public static final String CONFIG_GAME_DISABLED   = "§cDisabled";
     public static final String CONFIG_GAME_NOT_FOUND  = "§cGame '%s' not found.";
     public static final String CONFIG_GAME_SET        = "§aGame '%s' is now %s§a.";
-    public static final String CONFIG_PREVENT_CONSECUTIVE_SET = "§aPrevent consecutive games is now %s§a.";
+    public static final String CONFIG_PREVENT_CONSECUTIVE_SET   = "§aPrevent consecutive games is now %s§a.";
     public static final String CONFIG_USAGE_PREVENT_CONSECUTIVE = "§cUsage: /ottergames config rules preventConsecutive <true|false>";
-    public static final String CONFIG_STATUS_LINE     = "§7- Prevent consecutive: %s";
-    public static final String CONFIG_MIN_PLAYERS_LINE = "§7- Min players to continue: §f%d";
-    public static final String CONFIG_MIN_PLAYERS_SET  = "§aMin players to continue is now %d§a.";
-    public static final String CONFIG_USAGE_MIN_PLAYERS = "§cUsage: /ottergames config rules minPlayersToContinue <number>";
+    public static final String CONFIG_STATUS_LINE                = "§7- Prevent consecutive: %s";
+    public static final String CONFIG_LIVES_SET                  = "§aMax lives set to §f%d§a.";
+    public static final String CONFIG_LIVES_INVALID              = "§cLives must be an integer >= 1.";
+    public static final String CONFIG_USAGE_LIVES                = "§cUsage: /ottergames config rules lives <number>";
+    public static final String CONFIG_LIVES_STATUS               = "§7- Max lives: §f%d";
 
     // ──────────────────────────────────────────────
     //  Structure / Arena loading
@@ -158,6 +159,20 @@ public final class Constants {
     public static final String OTTERDEV_USAGE             = "§b[OtterDev] §7Subcommands: §ftest <structure_name>";
     public static final String OTTERDEV_TEST_USAGE        = "§cUsage: /otterdev test <structure_name>";
     public static final String OTTERDEV_STRUCTURE_SPAWNED = "§a[OtterDev] §7Structure spawned: ";
+
+    // ──────────────────────────────────────────────
+    //  Scoreboard
+    // ──────────────────────────────────────────────
+    public static final String SCOREBOARD_LIVES_LABEL      = "Vies : ";
+    public static final String SCOREBOARD_POINTS_LABEL     = "Points : ";
+    public static final String SCOREBOARD_PLAYERS_LABEL    = "Joueurs restant : ";
+    public static final String SCOREBOARD_GAMES_LABEL      = "Jeux survécus : ";
+    public static final String SCOREBOARD_GAME_IN_PROGRESS = "Mini-jeux n°%d en cours";
+    public static final String SCOREBOARD_NEXT_GAME        = "Mini-jeux n°%d : %s";
+    public static final String SCOREBOARD_ROLE_PLAYER      = "Joueur";
+    public static final String SCOREBOARD_PLAYER_ICON      = "⚔ ";
+    public static final String SCOREBOARD_ROLE_SPECTATOR   = "Spectateur";
+    public static final String SCOREBOARD_SPECTATOR_ICON   = "◌ ";
 
     // ──────────────────────────────────────────────
     //  Structure names
