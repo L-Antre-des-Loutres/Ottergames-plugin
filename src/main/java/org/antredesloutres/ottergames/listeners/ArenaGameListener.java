@@ -7,7 +7,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -24,6 +23,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.antredesloutres.ottergames.utils.Constants;
+import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -96,7 +96,7 @@ public class ArenaGameListener implements Listener {
         }
 
         // GLOBAL DEFAULT: Block entity interaction when holding a Wind Charge
-        if (item.getType() == Material.WIND_CHARGE) {
+        if (item != null && item.getType() == Material.WIND_CHARGE) {
             event.setCancelled(true);
             return;
         }
@@ -142,7 +142,7 @@ public class ArenaGameListener implements Listener {
                 player.teleport(spawnLocation);
 
                 if (currentGame.healOnBoundsExit()) {
-                    healPlayer(player);
+                    PlayerUtils.healPlayer(player);
                 }
 
                 if (currentGame.restoreInventoryOnBoundsExit()) {
@@ -304,16 +304,4 @@ public class ArenaGameListener implements Listener {
         }
     }
 
-    // ──────────────────────────────────────────────
-    //  Utilities
-    // ──────────────────────────────────────────────
-    private void healPlayer(Player player) {
-        var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth != null) {
-            player.setHealth(maxHealth.getValue());
-        }
-        player.setFoodLevel(20);
-        player.setSaturation(5.0f);
-        player.setFireTicks(0);
-    }
 }

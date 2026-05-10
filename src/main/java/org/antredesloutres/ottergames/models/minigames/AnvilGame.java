@@ -171,6 +171,7 @@ public class AnvilGame implements Minigame, Listener {
     }
 
     private void spawnSingleAnvil(Location location) {
+        if (location.getWorld() == null) return;
         FallingBlock anvil = location.getWorld().spawnFallingBlock(location, Bukkit.createBlockData(Material.ANVIL));
         anvil.setHurtEntities(true);
         anvil.setDamagePerBlock(DAMAGE_PER_BLOCK);

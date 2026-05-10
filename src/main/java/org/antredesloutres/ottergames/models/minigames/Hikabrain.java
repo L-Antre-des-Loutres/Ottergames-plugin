@@ -17,7 +17,6 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
@@ -348,7 +347,7 @@ public class Hikabrain implements Minigame {
                     Player p = Bukkit.getPlayer(playerEntry.getKey());
                     if (p != null) {
                         p.sendMessage(String.format(Constants.HIKABRAIN_POINT_SCORED, player.getName(), teamDisplayName, score1, score2));
-                        healPlayer(p);
+                        PlayerUtils.healPlayer(p);
                         PlayerUtils.clearInventory(p);
                         Location spawn = gameManager.getPlayerSpawnLocation(p.getUniqueId());
                         if (spawn != null) {
@@ -371,11 +370,4 @@ public class Hikabrain implements Minigame {
         // No specific interaction rules for Hikabrain yet
     }
 
-    private void healPlayer(Player player) {
-        var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth != null) player.setHealth(maxHealth.getValue());
-        player.setFoodLevel(20);
-        player.setSaturation(5.0f);
-        player.setFireTicks(0);
-    }
 }

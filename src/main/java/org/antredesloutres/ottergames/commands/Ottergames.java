@@ -198,7 +198,7 @@ public class Ottergames implements TabExecutor {
                 gm.getConfigManager().getGameConfig().setMaxLives(lives);
                 gm.getConfigManager().save();
                 sender.sendMessage(String.format(Constants.CONFIG_LIVES_SET, lives));
-              
+            }
             case "minplayerstocontinue" -> {
                 if (args.length < 4) {
                     sender.sendMessage(Constants.CONFIG_USAGE_MIN_PLAYERS);
@@ -237,7 +237,7 @@ public class Ottergames implements TabExecutor {
             if (args[1].equalsIgnoreCase("games")) {
                 StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "enable", "disable"), completions);
             } else if (args[1].equalsIgnoreCase("rules")) {
-                StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "preventConsecutive", "lives"), completions);
+                StringUtil.copyPartialMatches(args[2].toLowerCase(Locale.ROOT), List.of("list", "preventConsecutive", "lives", "minplayerstocontinue"), completions);
             }
         } else if (args.length == 4 && args[0].equalsIgnoreCase("config")) {
             if (args[1].equalsIgnoreCase("games") && (args[2].equalsIgnoreCase("enable") || args[2].equalsIgnoreCase("disable"))) {
