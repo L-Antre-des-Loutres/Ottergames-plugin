@@ -52,7 +52,7 @@ public class TeleportManager {
             playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
             playerArenaAssignments.put(player.getUniqueId(), lobby);
             player.teleport(spawn);
-            PlayerUtils.resetForLobby(player, GameMode.ADVENTURE);
+            PlayerUtils.resetForLobby(player, GameMode.ADVENTURE, true);
             if (isSpectator) {
                 lobbyGame.onGameSpectatorSpawn(player);
             } else {

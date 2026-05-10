@@ -24,7 +24,7 @@ public class PlayerUtils {
         player.setFireTicks(0);
     }
 
-    public static void resetForLobby(Player player, GameMode gameMode) {
+    public static void resetForLobby(Player player, GameMode gameMode, boolean invulnerable) {
         var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHealth != null) {
             maxHealth.setBaseValue(maxHealth.getDefaultValue());
@@ -37,7 +37,7 @@ public class PlayerUtils {
         }
 
         player.setGameMode(gameMode);
-        player.setInvulnerable(true);
+        player.setInvulnerable(invulnerable);
         player.setAbsorptionAmount(0);
         player.setAllowFlight(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
         player.setFlying(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);

@@ -171,7 +171,7 @@ public class GameManager {
             Player player = Bukkit.getPlayer(gamePlayer.getUuid());
             if (player != null && player.isOnline()) {
                 player.teleport(player.getWorld().getSpawnLocation());
-                PlayerUtils.resetForLobby(player, GameMode.SURVIVAL);
+                PlayerUtils.resetForLobby(player, GameMode.SURVIVAL, false);
             }
         }
 
