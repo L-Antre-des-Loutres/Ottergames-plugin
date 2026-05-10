@@ -39,7 +39,7 @@ public class AnvilGame implements Minigame, Listener {
 
     // Game constants (Parameters stay here)
     private static final int GAME_DURATION_SECONDS = 30;
-    private static final int SPAWN_ZONE_SIZE = 22;
+    private static final int SPAWN_ZONE_SIZE = 24;
     private static final int INITIAL_SPAWN_TICKS = 10;
     private static final int MIN_SPAWN_TICKS = 2;
     private static final int DIFFICULTY_INCREASE_INTERVAL_TICKS = 100;
@@ -164,7 +164,8 @@ public class AnvilGame implements Minigame, Listener {
             int relZ = anvilSpawnRegion.minZ() + random.nextInt(anvilSpawnRegion.maxZ() - anvilSpawnRegion.minZ() + 1);
             int relY = anvilSpawnRegion.maxY() + ANVIL_SPAWN_Y_OFFSET; // Use the top of the structure with offset
 
-            Location spawnLoc = arena.origin().clone().add(relX, relY, relZ);
+            // Add 0.5 to center the anvil on the block
+            Location spawnLoc = arena.origin().clone().add(relX + 0.5, relY, relZ + 0.5);
             spawnSingleAnvil(spawnLoc);
         }
     }
@@ -241,20 +242,22 @@ public class AnvilGame implements Minigame, Listener {
         ArenaInstance arena = gm.getArenaAt(player.getLocation());
         if (arena == null) return;
 
+        // Reach extension: Raytrace up to 100 blocks
+        var rayTraceResult = player.rayTraceBlocks(100);
+        if (rayTraceResult == null || rayTraceResult.getHitBlock() == null) {
+            return;
+        }
+
+        // Spawn anvil below the targeted block, centered
+        Location spawnLoc = rayTraceResult.getHitBlock().getLocation().clone().add(0.5, -1, 0.5);
+
         // Restriction: can only spawn anvils within the anvil spawn region
-        if (!anvilSpawnRegion.contains(arena, player.getLocation())) {
+        if (!anvilSpawnRegion.contains(arena, spawnLoc)) {
             player.sendMessage(Component.text(Constants.ANVIL_SPECTATOR_RESTRICTION, NamedTextColor.RED));
             return;
         }
 
-        // Spawn anvil above the player (at the same height as normal ones)
-        Location finalSpawnLoc = arena.origin().clone().add(
-                player.getLocation().getX() - arena.origin().getX(),
-                anvilSpawnRegion.maxY() + ANVIL_SPAWN_Y_OFFSET,
-                player.getLocation().getZ() - arena.origin().getZ()
-        );
-
-        spawnSingleAnvil(finalSpawnLoc);
+        spawnSingleAnvil(spawnLoc);
         spectatorCooldowns.put(player.getUniqueId(), now + SPECTATOR_COOLDOWN_MS);
         player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 0.5f, 1.5f);
     }
