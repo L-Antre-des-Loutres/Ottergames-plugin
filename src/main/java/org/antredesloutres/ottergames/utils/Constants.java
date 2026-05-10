@@ -123,6 +123,8 @@ public final class Constants {
     public static final String ANVIL_VICTORY_MESSAGE  = "§aVictory! You survived the anvil rain.";
     public static final String ANVIL_VICTORY_TITLE    = "VICTORY!";
     public static final String ANVIL_VICTORY_SUBTITLE = "You dodged them all!";
+    public static final String ANVIL_SPECTATOR_RESTRICTION = "§cYou can only spawn anvils within the play area!";
+    public static final String ANVIL_SPECTATOR_ITEM_NAME = "§cSpawn Anvil!";
 
     // ──────────────────────────────────────────────
     //  Participant

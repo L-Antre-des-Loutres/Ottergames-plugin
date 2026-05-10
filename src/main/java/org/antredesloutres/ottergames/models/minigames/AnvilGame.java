@@ -39,7 +39,7 @@ public class AnvilGame implements Minigame, Listener {
 
     // Game constants (Parameters stay here)
     private static final int GAME_DURATION_SECONDS = 30;
-    private static final int SPAWN_ZONE_SIZE = 24;
+    private static final int SPAWN_ZONE_SIZE = 22;
     private static final int INITIAL_SPAWN_TICKS = 10;
     private static final int MIN_SPAWN_TICKS = 2;
     private static final int DIFFICULTY_INCREASE_INTERVAL_TICKS = 100;
@@ -55,7 +55,6 @@ public class AnvilGame implements Minigame, Listener {
 
     // Spectator item
     private static final long SPECTATOR_COOLDOWN_MS = 2000;
-    private static final String SPECTATOR_ITEM_NAME = "§cSpawn Anvil!";
 
     private final Main plugin;
     private final MinigameArena structure;
@@ -227,7 +226,7 @@ public class AnvilGame implements Minigame, Listener {
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !SPECTATOR_ITEM_NAME.equals(meta.getDisplayName())) return;
+        if (meta == null || !Constants.ANVIL_SPECTATOR_ITEM_NAME.equals(meta.getDisplayName())) return;
 
         event.setCancelled(true);
 
@@ -241,6 +240,12 @@ public class AnvilGame implements Minigame, Listener {
         GameManager gm = plugin.getGameManager();
         ArenaInstance arena = gm.getArenaAt(player.getLocation());
         if (arena == null) return;
+
+        // Restriction: can only spawn anvils within the anvil spawn region
+        if (!anvilSpawnRegion.contains(arena, player.getLocation())) {
+            player.sendMessage(Component.text(Constants.ANVIL_SPECTATOR_RESTRICTION, NamedTextColor.RED));
+            return;
+        }
 
         // Spawn anvil above the player (at the same height as normal ones)
         Location finalSpawnLoc = arena.origin().clone().add(
@@ -263,6 +268,7 @@ public class AnvilGame implements Minigame, Listener {
         player.setAllowFlight(false);
         player.setFlying(false);
         player.removePotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY);
+        player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, false, false));
     }
 
     @Override
@@ -274,12 +280,13 @@ public class AnvilGame implements Minigame, Listener {
         player.setAllowFlight(true);
         player.setFlying(true);
         player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
+        player.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, false, false));
 
         // Give the spectator anvil item
         ItemStack anvilItem = new ItemStack(Material.ANVIL);
         ItemMeta meta = anvilItem.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(SPECTATOR_ITEM_NAME);
+            meta.setDisplayName(Constants.ANVIL_SPECTATOR_ITEM_NAME);
             anvilItem.setItemMeta(meta);
         }
         player.getInventory().setItem(4, anvilItem);
