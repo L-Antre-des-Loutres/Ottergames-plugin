@@ -341,6 +341,12 @@ public class GameManager {
 
     private void teleportToLobby() {
         if (lobbyArenas.isEmpty()) return;
+        
+        // Clear lobby from any leftover entities/modifications
+        for (ArenaInstance lobby : lobbyArenas) {
+            lobby.clear();
+        }
+
         ArenaInstance lobby = lobbyArenas.getFirst();
 
         List<GamePlayer> players = participantManager.getParticipants();
@@ -413,10 +419,14 @@ public class GameManager {
     }
 
     private List<Minigame> getSelectableGames(GameSelectionContext selectionContext) {
+        int minRequired = configManager.getGameConfig().getMinPlayersToContinue();
+
         // 1. Identify all enabled and selectable games (ignoring consecutive rule for now)
         List<Minigame> availableGames = new ArrayList<>();
         for (Minigame game : games) {
-            if (configManager.getGameConfig().isGameEnabled(game.getName()) && game.canBeSelected(selectionContext)) {
+            if (configManager.getGameConfig().isGameEnabled(game.getName()) 
+                && game.canBeSelected(selectionContext)
+                && selectionContext.activeParticipantCount() >= minRequired) {
                 availableGames.add(game);
             }
         }

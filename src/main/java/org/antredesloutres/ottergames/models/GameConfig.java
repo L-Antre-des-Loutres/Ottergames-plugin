@@ -6,6 +6,7 @@ import java.util.Set;
 public class GameConfig {
     private Set<String> disabledGames = new HashSet<>();
     private boolean preventSameGameConsecutively = true;
+    private int minPlayersToContinue = 1;
 
     public Set<String> getDisabledGames() {
         return disabledGames;
@@ -21,6 +22,14 @@ public class GameConfig {
 
     public void setPreventSameGameConsecutively(boolean preventSameGameConsecutively) {
         this.preventSameGameConsecutively = preventSameGameConsecutively;
+    }
+
+    public int getMinPlayersToContinue() {
+        return minPlayersToContinue;
+    }
+
+    public void setMinPlayersToContinue(int minPlayersToContinue) {
+        this.minPlayersToContinue = minPlayersToContinue;
     }
 
     public boolean isGameEnabled(String gameName) {
