@@ -25,9 +25,11 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 public class GameManager {
@@ -42,6 +44,7 @@ public class GameManager {
     private final ArenaSlotManager arenaSlotManager;
     private final ConfigManager configManager;
 
+    private final ScoreboardManager scoreboardManager;
     private final Lobby lobbyGame;
     private List<ArenaInstance> lobbyArenas = Collections.emptyList();
     private Minigame currentGame;
@@ -64,6 +67,7 @@ public class GameManager {
         this.arenaSlotManager = new ArenaSlotManager(plugin);
         this.configManager = new ConfigManager(plugin);
         this.participantManager = new GameParticipantManager();
+        this.scoreboardManager = new ScoreboardManager();
         this.lobbyGame = new Lobby(plugin);
 
         // Add games
@@ -116,6 +120,14 @@ public class GameManager {
         teleportToLobby();
         prepareNextMinigame();
 
+        scoreboardManager.init();
+        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                scoreboardManager.assignToPlayer(player);
+            }
+        }
+
         this.loopTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -149,6 +161,7 @@ public class GameManager {
         nextGame = null;
         lastGame = null; // Reset last game played on full stop
 
+        scoreboardManager.destroy();
         clearAllParticipantsInventories();
         clearAllParticipantsXp();
 
@@ -186,7 +199,11 @@ public class GameManager {
     }
 
     public boolean handlePlayerJoin(Player player) {
-        return participantManager.handlePlayerJoin(player, running);
+        boolean isSpectator = participantManager.handlePlayerJoin(player, running);
+        if (running) {
+            scoreboardManager.assignToPlayer(player);
+        }
+        return isSpectator;
     }
 
     public LeaveResult handlePlayerLeave(Player player) {
@@ -214,6 +231,7 @@ public class GameManager {
             showStartCountdown(startCountdownSecondsRemaining);
             updateXpBar(startCountdownSecondsRemaining, INITIAL_COUNTDOWN_SECONDS);
             startCountdownSecondsRemaining--;
+            updateScoreboard();
             return;
         }
 
@@ -228,6 +246,34 @@ public class GameManager {
             }
             updateXpBar(timer, maxTimer);
         }
+        updateScoreboard();
+    }
+
+    private void updateScoreboard() {
+        int active = participantManager.getActiveParticipantCount();
+        int total = active + participantManager.getSpectatorParticipantCount();
+        int completedGames = isPaused ? currentRound : currentRound - 1;
+        Set<UUID> spectators = new HashSet<>();
+        for (GamePlayer gp : participantManager.getSpectatorParticipants()) {
+            spectators.add(gp.getUuid());
+        }
+        scoreboardManager.updateAll(active, total, completedGames, buildStatusLine(), currentGame.getName(), spectators);
+    }
+
+    private Component buildStatusLine() {
+        if (!isPaused) {
+            return Component.text(
+                String.format(Constants.SCOREBOARD_GAME_IN_PROGRESS, currentRound),
+                NamedTextColor.YELLOW
+            );
+        }
+        if (nextGame != null) {
+            return Component.text(
+                String.format(Constants.SCOREBOARD_NEXT_GAME, currentRound + 1, nextGame.getName()),
+                NamedTextColor.YELLOW
+            );
+        }
+        return Component.empty();
     }
 
     private void updateXpBar(int current, int max) {
@@ -318,6 +364,10 @@ public class GameManager {
     private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
         lastGame = currentGame;
+
+        for (GamePlayer survivor : participantManager.getActiveParticipants()) {
+            scoreboardManager.recordSurvivedGame(survivor.getUuid());
+        }
 
         currentGame.onEnd(this);
         arenaSlotManager.free(currentArenas);

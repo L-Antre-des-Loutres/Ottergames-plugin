@@ -157,6 +157,18 @@ public final class Constants {
     public static final String OTTERDEV_STRUCTURE_SPAWNED = "§a[OtterDev] §7Structure spawned: ";
 
     // ──────────────────────────────────────────────
+    //  Scoreboard
+    // ──────────────────────────────────────────────
+    public static final String SCOREBOARD_LIVES_LABEL      = "Vies : ";
+    public static final String SCOREBOARD_POINTS_LABEL     = "Points : ";
+    public static final String SCOREBOARD_PLAYERS_LABEL    = "Joueurs restant : ";
+    public static final String SCOREBOARD_GAMES_LABEL      = "Parties : ";
+    public static final String SCOREBOARD_GAME_IN_PROGRESS = "Mini-jeux n°%d en cours";
+    public static final String SCOREBOARD_NEXT_GAME        = "Mini-jeux n°%d : %s";
+    public static final String SCOREBOARD_ROLE_PLAYER      = "Joueur";
+    public static final String SCOREBOARD_ROLE_SPECTATOR   = "Spectateur";
+
+    // ──────────────────────────────────────────────
     //  Structure names
     // ──────────────────────────────────────────────
     public static final String STRUCTURE_DROPPER   = "dropper/ottergames_dropper_warden";
