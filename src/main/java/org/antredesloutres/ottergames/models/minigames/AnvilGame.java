@@ -259,6 +259,7 @@ public class AnvilGame implements Minigame, Listener {
 
         spawnSingleAnvil(spawnLoc);
         spectatorCooldowns.put(player.getUniqueId(), now + SPECTATOR_COOLDOWN_MS);
+        player.setCooldown(Material.ANVIL, (int) (SPECTATOR_COOLDOWN_MS / 50));
         player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 0.5f, 1.5f);
     }
 
