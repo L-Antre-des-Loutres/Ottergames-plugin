@@ -84,6 +84,12 @@ public class Spleef implements Minigame {
     }
 
     @Override
+    public void onGameSpectatorSpawn(Player player) {
+        PlayerUtils.clearInventory(player);
+        player.setGameMode(GameMode.SPECTATOR);
+    }
+
+    @Override
     public void onGamePlayerSpawn(Player player) {
         player.setGameMode(GameMode.SURVIVAL);
 

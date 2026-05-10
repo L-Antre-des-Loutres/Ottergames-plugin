@@ -458,6 +458,12 @@ public class GameManager {
         return participantManager.eliminatePlayer(playerId);
     }
 
+    public void setupPlayerAsSpectator(Player player) {
+        if (currentGame == null) return;
+        List<ArenaInstance> arenas = isPaused ? lobbyArenas : currentArenas;
+        teleportManager.teleportSingleSpectator(player, currentGame, arenas);
+    }
+
     public boolean isPlayerSpectator(UUID playerId) {
         return participantManager.isPlayerSpectator(playerId);
     }

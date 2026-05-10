@@ -22,15 +22,14 @@ public class Lobby implements Minigame {
     private final MinigameArena structure;
 
     public Lobby(Main plugin) {
-        // Lobby capacity is high, and it uses the ottergames_lobby structure.
-        // We define a default spawn zone in the middle of the structure.
+
         this.structure = new MinigameArena(
                 plugin,
                 Constants.STRUCTURE_LOBBY,
                 100,
                 Map.of("spawn", new ArenaSpawnZone(8, 19, 8, 8, 19, 8, 0f, 0f))
         );
-        }
+    }
 
     @Override
     public String getName() {
@@ -70,8 +69,15 @@ public class Lobby implements Minigame {
 
     @Override
     public void onGamePlayerSpawn(Player player) {
-        // Clear inventory in the lobby.
         PlayerUtils.clearInventory(player);
+    }
+
+    @Override
+    public void onGameSpectatorSpawn(Player player) {
+        PlayerUtils.clearInventory(player);
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        player.setInvulnerable(true);
     }
 
     @Override

@@ -14,6 +14,7 @@ import org.antredesloutres.ottergames.utils.StructureSpawner;
 import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -185,6 +186,12 @@ public class Hikabrain implements Minigame {
     @Override
     public boolean restoreInventoryOnBoundsExit() {
         return true;
+    }
+
+    @Override
+    public void onGameSpectatorSpawn(Player player) {
+        PlayerUtils.clearInventory(player);
+        player.setGameMode(GameMode.SPECTATOR);
     }
 
     @Override

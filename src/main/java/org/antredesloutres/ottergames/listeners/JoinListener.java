@@ -37,6 +37,11 @@ public class JoinListener implements Listener {
                     statusMessage = Component.text(Constants.JOIN_GAME_IN_PROGRESS_PREFIX, NamedTextColor.RED)
                             .append(Component.text(Constants.JOIN_GAME_IN_PROGRESS_SUFFIX, NamedTextColor.GRAY));
                 }
+                plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                    if (event.getPlayer().isOnline()) {
+                        gameManager.setupPlayerAsSpectator(event.getPlayer());
+                    }
+                }, 2L);
             }
             case IGNORED_MID_GAME -> {
                 // Do nothing, player is ignored by Ottergames

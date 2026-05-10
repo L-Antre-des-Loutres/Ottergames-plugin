@@ -100,14 +100,26 @@ public class TeleportManager {
             Player player = Bukkit.getPlayer(spec.getUuid());
             if (player == null || !player.isOnline()) continue;
 
-            Location spawn = currentGame.getSpectatorSpawnLocation(arena, random);
-            if (spawn.getWorld() == null) continue;
-
-            playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
-            playerArenaAssignments.put(player.getUniqueId(), arena);
-            player.teleport(spawn);
-            currentGame.onGameSpectatorSpawn(player);
+            applySpectatorState(player, currentGame, arena);
         }
+    }
+
+    public void teleportSingleSpectator(Player player, Minigame game, List<ArenaInstance> arenas) {
+        if (arenas.isEmpty()) return;
+        ArenaInstance arena = playerArenaAssignments.getOrDefault(player.getUniqueId(), arenas.getFirst());
+        applySpectatorState(player, game, arena);
+    }
+
+    private void applySpectatorState(Player player, Minigame game, ArenaInstance arena) {
+        Location spawn = game.getSpectatorSpawnLocation(arena, random);
+        if (spawn.getWorld() == null) return;
+
+        playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
+        playerArenaAssignments.put(player.getUniqueId(), arena);
+        player.teleport(spawn);
+        PlayerUtils.clearInventory(player);
+        player.setInvulnerable(true);
+        game.onGameSpectatorSpawn(player);
     }
 
     public Location getPlayerSpawn(UUID playerId) {

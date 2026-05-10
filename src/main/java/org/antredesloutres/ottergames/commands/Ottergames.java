@@ -79,6 +79,9 @@ public class Ottergames implements TabExecutor {
                     case LEFT_AND_SPECTATING -> OTTERGAMES_LEFT_SPECTATING;
                     default                -> OTTERGAMES_LEFT;
                 });
+                if (result == LeaveResult.LEFT_AND_SPECTATING) {
+                    gameManager.setupPlayerAsSpectator(player);
+                }
             }
             case "config" -> handleConfig(sender, args);
             default -> sender.sendMessage(OTTERGAMES_UNKNOWN_COMMAND);
