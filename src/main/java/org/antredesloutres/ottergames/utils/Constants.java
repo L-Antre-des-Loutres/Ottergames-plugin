@@ -55,6 +55,9 @@ public final class Constants {
     public static final String CONFIG_PREVENT_CONSECUTIVE_SET = "§aPrevent consecutive games is now %s§a.";
     public static final String CONFIG_USAGE_PREVENT_CONSECUTIVE = "§cUsage: /ottergames config rules preventConsecutive <true|false>";
     public static final String CONFIG_STATUS_LINE     = "§7- Prevent consecutive: %s";
+    public static final String CONFIG_MIN_PLAYERS_LINE = "§7- Min players to continue: §f%d";
+    public static final String CONFIG_MIN_PLAYERS_SET  = "§aMin players to continue is now %d§a.";
+    public static final String CONFIG_USAGE_MIN_PLAYERS = "§cUsage: /ottergames config rules minPlayersToContinue <number>";
 
     // ──────────────────────────────────────────────
     //  Structure / Arena loading

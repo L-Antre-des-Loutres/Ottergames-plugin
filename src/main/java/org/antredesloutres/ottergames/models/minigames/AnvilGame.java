@@ -54,7 +54,7 @@ public class AnvilGame implements Minigame, Listener {
     private static final int ANVIL_SPAWN_Y_OFFSET = -20; // Offset from structure top
 
     // Spectator item
-    private static final long SPECTATOR_COOLDOWN_MS = 2000;
+    private static final long SPECTATOR_COOLDOWN_MS = 1000;
 
     private final Main plugin;
     private final MinigameArena structure;
