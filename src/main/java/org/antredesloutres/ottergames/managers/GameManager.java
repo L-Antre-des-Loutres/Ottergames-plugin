@@ -102,8 +102,10 @@ public class GameManager {
             return false;
         }
 
-        // Allocate lobby
-        lobbyArenas = arenaSlotManager.allocate(lobbyGame.getStructureName(), 1);
+        // Allocate lobby if not already present
+        if (lobbyArenas.isEmpty()) {
+            lobbyArenas = arenaSlotManager.allocate(lobbyGame.getStructureName(), 1);
+        }
 
         this.running = true;
         this.isPaused = true;
@@ -135,17 +137,18 @@ public class GameManager {
             plugin.getLogger().info(String.format(Constants.LOGGER_MINIGAME_STOPPED, currentGame.getName()));
         }
 
-        // Free lobby
-        if (!lobbyArenas.isEmpty()) {
-            arenaSlotManager.free(lobbyArenas);
-            lobbyArenas = Collections.emptyList();
-        }
-
         // Free pre-loaded next game arenas (may exist if stopped during break time)
         if (!nextArenas.isEmpty()) {
             arenaSlotManager.free(nextArenas);
             nextArenas = Collections.emptyList();
         }
+
+        // Free lobby at the very end
+        if (!lobbyArenas.isEmpty()) {
+            arenaSlotManager.free(lobbyArenas);
+            lobbyArenas = Collections.emptyList();
+        }
+
         nextGame = null;
         lastGame = null; // Reset last game played on full stop
 
@@ -342,9 +345,9 @@ public class GameManager {
     private void teleportToLobby() {
         if (lobbyArenas.isEmpty()) return;
         
-        // Clear lobby from any leftover entities/modifications
+        // Clear lobby from any leftover entities
         for (ArenaInstance lobby : lobbyArenas) {
-            lobby.clear();
+            lobby.clearEntities();
         }
 
         ArenaInstance lobby = lobbyArenas.getFirst();
