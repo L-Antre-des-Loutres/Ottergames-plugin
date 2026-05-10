@@ -383,7 +383,7 @@ public class GameManager {
         }
 
         player.setGameMode(gameMode);
-        player.setInvulnerable(false);
+        player.setInvulnerable(true);
         player.setAbsorptionAmount(0);
         player.setAllowFlight(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
         player.setFlying(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
