@@ -22,7 +22,27 @@ public record ArenaInstance(Location origin, BlockVector size) {
     }
 
     /**
-     * Clears the arena by setting all blocks within the arena's bounds to AIR.
+     * Removes all entities except players within the arena bounds.
+     */
+    public void clearEntities() {
+        var world = origin.getWorld();
+        if (world == null) return;
+
+        double centerX = origin.getX() + size.getX() / 2.0;
+        double centerY = origin.getY() + size.getY() / 2.0;
+        double centerZ = origin.getZ() + size.getZ() / 2.0;
+
+        world.getNearbyEntities(new Location(world, centerX, centerY, centerZ), size.getX() / 2.0, size.getY() / 2.0, size.getZ() / 2.0)
+                .forEach(entity -> {
+                    if (!(entity instanceof org.bukkit.entity.Player)) {
+                        entity.remove();
+                    }
+                });
+    }
+
+    /**
+     * Clears the arena by setting all blocks within the arena's bounds to AIR
+     * and removing all entities except players.
      */
     public void clear() {
         var world = origin.getWorld();
@@ -32,10 +52,14 @@ public record ArenaInstance(Location origin, BlockVector size) {
         int oy = origin.getBlockY();
         int oz = origin.getBlockZ();
 
+        // Clear blocks
         for (int x = 0; x < size.getBlockX(); x++)
             for (int y = 0; y < size.getBlockY(); y++)
                 for (int z = 0; z < size.getBlockZ(); z++)
                     world.getBlockAt(ox + x, oy + y, oz + z).setType(Material.AIR, false);
+
+        // Clear entities
+        clearEntities();
     }
 
     /**

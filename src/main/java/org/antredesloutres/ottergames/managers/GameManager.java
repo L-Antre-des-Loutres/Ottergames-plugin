@@ -109,8 +109,10 @@ public class GameManager {
             return false;
         }
 
-        // Allocate lobby
-        lobbyArenas = arenaSlotManager.allocate(lobbyGame.getStructureName(), 1);
+        // Allocate lobby if not already present
+        if (lobbyArenas.isEmpty()) {
+            lobbyArenas = arenaSlotManager.allocate(lobbyGame.getStructureName(), 1);
+        }
 
         this.running = true;
         this.isPaused = true;
@@ -150,17 +152,18 @@ public class GameManager {
             plugin.getLogger().info(String.format(Constants.LOGGER_MINIGAME_STOPPED, currentGame.getName()));
         }
 
-        // Free lobby
-        if (!lobbyArenas.isEmpty()) {
-            arenaSlotManager.free(lobbyArenas);
-            lobbyArenas = Collections.emptyList();
-        }
-
         // Free pre-loaded next game arenas (may exist if stopped during break time)
         if (!nextArenas.isEmpty()) {
             arenaSlotManager.free(nextArenas);
             nextArenas = Collections.emptyList();
         }
+
+        // Free lobby at the very end
+        if (!lobbyArenas.isEmpty()) {
+            arenaSlotManager.free(lobbyArenas);
+            lobbyArenas = Collections.emptyList();
+        }
+
         nextGame = null;
         lastGame = null; // Reset last game played on full stop
 
@@ -416,6 +419,7 @@ public class GameManager {
 
     private void teleportToLobby() {
         if (lobbyArenas.isEmpty()) return;
+        
         ArenaInstance lobby = lobbyArenas.getFirst();
 
         List<GamePlayer> players = participantManager.getParticipants();
@@ -454,7 +458,7 @@ public class GameManager {
         }
 
         player.setGameMode(gameMode);
-        player.setInvulnerable(false);
+        player.setInvulnerable(true);
         player.setAbsorptionAmount(0);
         player.setAllowFlight(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
         player.setFlying(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
@@ -488,10 +492,14 @@ public class GameManager {
     }
 
     private List<Minigame> getSelectableGames(GameSelectionContext selectionContext) {
+        int minRequired = configManager.getGameConfig().getMinPlayersToContinue();
+
         // 1. Identify all enabled and selectable games (ignoring consecutive rule for now)
         List<Minigame> availableGames = new ArrayList<>();
         for (Minigame game : games) {
-            if (configManager.getGameConfig().isGameEnabled(game.getName()) && game.canBeSelected(selectionContext)) {
+            if (configManager.getGameConfig().isGameEnabled(game.getName()) 
+                && game.canBeSelected(selectionContext)
+                && selectionContext.activeParticipantCount() >= minRequired) {
                 availableGames.add(game);
             }
         }

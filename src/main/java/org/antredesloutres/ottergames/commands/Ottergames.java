@@ -198,6 +198,21 @@ public class Ottergames implements TabExecutor {
                 gm.getConfigManager().getGameConfig().setMaxLives(lives);
                 gm.getConfigManager().save();
                 sender.sendMessage(String.format(Constants.CONFIG_LIVES_SET, lives));
+              
+            case "minplayerstocontinue" -> {
+                if (args.length < 4) {
+                    sender.sendMessage(Constants.CONFIG_USAGE_MIN_PLAYERS);
+                    return;
+                }
+                try {
+                    int min = Integer.parseInt(args[3]);
+                    if (min < 0) throw new NumberFormatException();
+                    gm.getConfigManager().getGameConfig().setMinPlayersToContinue(min);
+                    gm.getConfigManager().save();
+                    sender.sendMessage(String.format(Constants.CONFIG_MIN_PLAYERS_SET, min));
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(Constants.CONFIG_USAGE_MIN_PLAYERS);
+                }
             }
             default -> sender.sendMessage(Constants.CONFIG_RULES_USAGE);
         }
