@@ -155,6 +155,14 @@ public class Dropper implements Minigame {
             }
         }
 
+        checkAllFinished(gameManager);
+    }
+
+    private void checkAllFinished(GameManager gameManager) {
+        int activeCount = gameManager.getActiveParticipants().size();
+        if (activeCount > 0 && finishedPlayers.size() >= activeCount) {
+            gameManager.forceTimerEnd();
+        }
     }
 
     @Override

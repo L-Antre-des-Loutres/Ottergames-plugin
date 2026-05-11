@@ -195,6 +195,10 @@ public class GameManager {
         plugin.getLogger().info(Constants.LOGGER_LOOP_STOPPED);
     }
 
+    public void forceTimerEnd() {
+        this.timer = 0;
+    }
+
     public boolean isRunning() {
         return running;
     }
