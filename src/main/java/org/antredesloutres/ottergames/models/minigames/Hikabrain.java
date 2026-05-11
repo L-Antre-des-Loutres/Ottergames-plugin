@@ -373,6 +373,30 @@ public class Hikabrain implements Minigame {
     }
 
     @Override
+    public java.util.Set<UUID> getLosers(GameManager gameManager) {
+        java.util.Set<UUID> losers = new java.util.HashSet<>();
+
+        for (Map.Entry<ArenaInstance, Map<String, Integer>> entry : arenaScores.entrySet()) {
+            Map<String, Integer> scores = entry.getValue();
+            int score1 = scores.get(TEAM_1);
+            int score2 = scores.get(TEAM_2);
+
+            if (score1 == score2) continue; // Draw: no losers
+
+            String losingTeam = (score1 < score2) ? TEAM_1 : TEAM_2;
+
+            for (Map.Entry<UUID, ArenaInstance> playerEntry : gameManager.getPlayerArenaAssignments().entrySet()) {
+                if (playerEntry.getValue().equals(entry.getKey())) {
+                    if (losingTeam.equals(playerTeams.get(playerEntry.getKey()))) {
+                        losers.add(playerEntry.getKey());
+                    }
+                }
+            }
+        }
+        return losers;
+    }
+
+    @Override
     public void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent event, GameManager gameManager) {
         // No specific interaction rules for Hikabrain yet
     }

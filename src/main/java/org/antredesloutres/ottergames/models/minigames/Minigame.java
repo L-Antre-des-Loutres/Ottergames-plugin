@@ -108,6 +108,14 @@ public interface Minigame {
      */
     default void onGameSpectatorSpawn(Player player) {}
 
+    /**
+     * Returns the set of players who lost the minigame (e.g. losers in a team game).
+     * These players will lose a life at the end of the round.
+     */
+    default java.util.Set<UUID> getLosers(org.antredesloutres.ottergames.managers.GameManager gameManager) {
+        return java.util.Collections.emptySet();
+    }
+
     // ──────────────────────────────────────────────
     //  Conditions
     // ──────────────────────────────────────────────

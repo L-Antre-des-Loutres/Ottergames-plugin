@@ -90,6 +90,11 @@ public class Spleef implements Minigame {
     }
 
     @Override
+    public boolean eliminateOnDeath() {
+        return true;
+    }
+
+    @Override
     public void onGamePlayerSpawn(Player player) {
         player.setGameMode(GameMode.SURVIVAL);
 
@@ -177,9 +182,13 @@ public class Spleef implements Minigame {
         // Eliminate if the player is within horizontal bounds and falls into the bottom 3 blocks of the arena
         if (withinHorizontalBounds && to.getY() < origin.getY() + 2) {
             gameManager.eliminatePlayer(playerId);
-            player.setGameMode(GameMode.SPECTATOR);
             player.sendMessage(Constants.ARENA_ELIMINATED_BOUNDS);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_DEATH, 1.0f, 1.0f);
+            
+            // Teleport to spectator spawn and setup spectator mode
+            Location specSpawn = getSpectatorSpawnLocation(arena, new Random());
+            player.teleport(specSpawn);
+            onGameSpectatorSpawn(player);
         }
     }
 

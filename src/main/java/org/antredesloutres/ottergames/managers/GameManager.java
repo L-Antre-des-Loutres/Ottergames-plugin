@@ -342,8 +342,10 @@ public class GameManager {
         String gameName = currentGame.getName();
         gameSelector.setLastGame(currentGame);
 
+        java.util.Set<java.util.UUID> losers = currentGame.getLosers(this);
+
         currentGame.onEnd(this);
-        livesManager.applyRoundResult(participantManager, scoreboardManager);
+        livesManager.applyRoundResult(participantManager, scoreboardManager, losers);
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
         teleportManager.clear();

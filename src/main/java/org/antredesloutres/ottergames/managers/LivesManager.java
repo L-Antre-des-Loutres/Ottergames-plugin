@@ -37,11 +37,16 @@ public class LivesManager {
         }
     }
 
-    public void applyRoundResult(GameParticipantManager participantManager, ScoreboardManager scoreboardManager) {
+    public void applyRoundResult(GameParticipantManager participantManager, ScoreboardManager scoreboardManager, Set<UUID> minigameLosers) {
         for (UUID playerId : roundStartActivePlayers) {
-            if (!participantManager.isPlayerSpectator(playerId)) {
+            boolean isSpectator = participantManager.isPlayerSpectator(playerId);
+            boolean isMinigameLoser = minigameLosers.contains(playerId);
+
+            if (!isSpectator && !isMinigameLoser) {
+                // Player survived and didn't lose the minigame
                 scoreboardManager.recordSurvivedGame(playerId);
             } else {
+                // Player was eliminated OR lost the minigame (Hikabrain)
                 int remaining = playerLives.merge(playerId, -1, Integer::sum);
                 if (remaining > 0) {
                     Player player = Bukkit.getPlayer(playerId);
