@@ -5,6 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.antredesloutres.ottergames.managers.GameManager;
 import org.antredesloutres.ottergames.utils.Constants;
+import org.antredesloutres.ottergames.utils.PlayerUtils;
 import org.antredesloutres.ottergames.models.arena.ArenaInstance;
 import org.antredesloutres.ottergames.models.arena.ArenaRegion;
 import org.antredesloutres.ottergames.models.arena.ArenaSpawnZone;
@@ -72,6 +73,12 @@ public class Dropper implements Minigame {
     }
 
     @Override
+    public void onGameSpectatorSpawn(Player player) {
+        PlayerUtils.clearInventory(player);
+        player.setGameMode(GameMode.SPECTATOR);
+    }
+
+    @Override
     public void onStart(List<ArenaInstance> arenas, GameManager gameManager) {
         finishedPlayers.clear();
     }
@@ -95,6 +102,8 @@ public class Dropper implements Minigame {
             }
 
             if (bukkitPlayer != null) {
+                var maxHealth = bukkitPlayer.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                if (maxHealth != null) maxHealth.setBaseValue(maxHealth.getDefaultValue());
                 bukkitPlayer.setInvulnerable(false);
                 bukkitPlayer.getInventory().clear();
                 bukkitPlayer.getInventory().setArmorContents(new ItemStack[4]);
@@ -146,6 +155,14 @@ public class Dropper implements Minigame {
             }
         }
 
+        checkAllFinished(gameManager);
+    }
+
+    private void checkAllFinished(GameManager gameManager) {
+        int activeCount = gameManager.getActiveParticipants().size();
+        if (activeCount > 0 && finishedPlayers.size() >= activeCount) {
+            gameManager.forceTimerEnd();
+        }
     }
 
     @Override

@@ -31,6 +31,8 @@ public class GameConfig {
 
     public void setMaxLives(int maxLives) {
         this.maxLives = maxLives;
+    }
+
     public int getMinPlayersToContinue() {
         return minPlayersToContinue;
     }

@@ -59,6 +59,8 @@ public final class Constants {
     public static final String CONFIG_LIVES_INVALID              = "§cLives must be an integer >= 1.";
     public static final String CONFIG_USAGE_LIVES                = "§cUsage: /ottergames config rules lives <number>";
     public static final String CONFIG_LIVES_STATUS               = "§7- Max lives: §f%d";
+    public static final String CONFIG_MIN_PLAYERS_SET            = "§aMin players to continue set to §f%d§a.";
+    public static final String CONFIG_USAGE_MIN_PLAYERS          = "§cUsage: /ottergames config rules minplayerstocontinue <number>";
 
     // ──────────────────────────────────────────────
     //  Structure / Arena loading

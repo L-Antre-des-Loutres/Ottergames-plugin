@@ -14,17 +14,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,19 +39,18 @@ public class GameManager {
     private final Main plugin;
     private final ArenaSlotManager arenaSlotManager;
     private final ConfigManager configManager;
-
     private final ScoreboardManager scoreboardManager;
     private final Lobby lobbyGame;
+    private final GameSelector gameSelector;
+    private final LivesManager livesManager;
+    private final TeleportManager teleportManager;
+
     private List<ArenaInstance> lobbyArenas = Collections.emptyList();
     private Minigame currentGame;
-    private Minigame lastGame = null;
     private List<ArenaInstance> currentArenas = Collections.emptyList();
     private Minigame nextGame = null;
     private List<ArenaInstance> nextArenas = Collections.emptyList();
-    private final Map<UUID, Location> playerSpawnLocations = new HashMap<>();
-    private final Map<UUID, ArenaInstance> playerArenaAssignments = new HashMap<>();
-    private final Map<UUID, Integer> playerLives = new HashMap<>();
-    private Set<UUID> roundStartActivePlayers = new HashSet<>();
+
     private int timer;
     private int maxTimer;
     private int startCountdownSecondsRemaining;
@@ -72,12 +67,15 @@ public class GameManager {
         this.scoreboardManager = new ScoreboardManager();
         this.lobbyGame = new Lobby(plugin);
 
-        // Add games
         this.games.add(new Dropper());
         this.games.add(new Spleef(plugin));
         this.games.add(new Hikabrain(plugin));
         this.games.add(new Clutch(plugin));
         this.games.add(new AnvilGame(plugin));
+
+        this.gameSelector = new GameSelector(games, configManager);
+        this.livesManager = new LivesManager(configManager);
+        this.teleportManager = new TeleportManager(participantManager, plugin, random);
     }
 
     public ConfigManager getConfigManager() {
@@ -97,9 +95,10 @@ public class GameManager {
         }
 
         participantManager.registerOnlinePlayersAsParticipants();
-        initializeLives();
-        GameSelectionContext initialSelectionContext = buildSelectionContext(1);
-        if (getSelectableGames(initialSelectionContext).isEmpty()) {
+        livesManager.initialize(participantManager.getParticipants());
+
+        GameSelectionContext initialSelectionContext = gameSelector.buildSelectionContext(1, participantManager);
+        if (gameSelector.getSelectableGames(initialSelectionContext).isEmpty()) {
             plugin.getLogger().warning(String.format(Constants.LOGGER_NO_GAME_ROUND_START,
                     initialSelectionContext.roundNumber(),
                     initialSelectionContext.activeParticipantCount(),
@@ -109,7 +108,6 @@ public class GameManager {
             return false;
         }
 
-        // Allocate lobby if not already present
         if (lobbyArenas.isEmpty()) {
             lobbyArenas = arenaSlotManager.allocate(lobbyGame.getStructureName(), 1);
         }
@@ -122,7 +120,7 @@ public class GameManager {
         this.currentRound = 0;
         this.currentGame = lobbyGame;
 
-        teleportToLobby();
+        teleportManager.teleportToLobby(lobbyGame, lobbyArenas);
         prepareNextMinigame();
 
         scoreboardManager.init();
@@ -152,36 +150,32 @@ public class GameManager {
             plugin.getLogger().info(String.format(Constants.LOGGER_MINIGAME_STOPPED, currentGame.getName()));
         }
 
-        // Free pre-loaded next game arenas (may exist if stopped during break time)
         if (!nextArenas.isEmpty()) {
             arenaSlotManager.free(nextArenas);
             nextArenas = Collections.emptyList();
         }
 
-        // Free lobby at the very end
         if (!lobbyArenas.isEmpty()) {
             arenaSlotManager.free(lobbyArenas);
             lobbyArenas = Collections.emptyList();
         }
 
         nextGame = null;
-        lastGame = null; // Reset last game played on full stop
+        gameSelector.reset();
 
         scoreboardManager.destroy();
         clearAllParticipantsInventories();
         clearAllParticipantsXp();
 
-        // Teleport everyone to world spawn and reset health/state
         for (GamePlayer gamePlayer : participantManager.getParticipants()) {
             Player player = Bukkit.getPlayer(gamePlayer.getUuid());
             if (player != null && player.isOnline()) {
                 player.teleport(player.getWorld().getSpawnLocation());
-                resetForLobby(player, GameMode.SURVIVAL); // Reset health, effects, and mode
+                PlayerUtils.resetForLobby(player, GameMode.SURVIVAL, false);
             }
         }
 
-        playerSpawnLocations.clear();
-        playerArenaAssignments.clear();
+        teleportManager.clear();
 
         if (this.loopTask != null) {
             this.loopTask.cancel();
@@ -195,23 +189,26 @@ public class GameManager {
         this.startCountdownSecondsRemaining = 0;
         this.currentRound = 0;
         this.running = false;
-        playerLives.clear();
-        roundStartActivePlayers.clear();
+        livesManager.clear();
         participantManager.clearAll();
         participantManager.registerOnlinePlayersAsParticipants();
         plugin.getLogger().info(Constants.LOGGER_LOOP_STOPPED);
+    }
+
+    public void forceTimerEnd() {
+        this.timer = 0;
     }
 
     public boolean isRunning() {
         return running;
     }
 
-    public boolean handlePlayerJoin(Player player) {
-        boolean isSpectator = participantManager.handlePlayerJoin(player, running);
+    public GameParticipantManager.JoinStatus handlePlayerJoin(Player player) {
+        GameParticipantManager.JoinStatus status = participantManager.handlePlayerJoin(player, running);
         if (running) {
             scoreboardManager.assignToPlayer(player);
         }
-        return isSpectator;
+        return status;
     }
 
     public LeaveResult handlePlayerLeave(Player player) {
@@ -222,7 +219,8 @@ public class GameManager {
         };
 
         if (result == LeaveResult.LEFT) {
-            clearPlayerXp(player);
+            player.setLevel(0);
+            player.setExp(0f);
         }
 
         return result;
@@ -257,35 +255,6 @@ public class GameManager {
         updateScoreboard();
     }
 
-    private void initializeLives() {
-        int maxLives = configManager.getGameConfig().getMaxLives();
-        playerLives.clear();
-        for (GamePlayer gp : participantManager.getParticipants()) {
-            playerLives.put(gp.getUuid(), maxLives);
-        }
-    }
-
-    private void applyLivesAndRecordSurvival() {
-        for (UUID playerId : roundStartActivePlayers) {
-            if (!participantManager.isPlayerSpectator(playerId)) {
-                scoreboardManager.recordSurvivedGame(playerId);
-            } else {
-                int remaining = playerLives.merge(playerId, -1, Integer::sum);
-                if (remaining > 0) {
-                    Player player = Bukkit.getPlayer(playerId);
-                    if (player != null && player.isOnline()) {
-                        participantManager.restoreAsActive(playerId);
-                    }
-                }
-            }
-        }
-        roundStartActivePlayers.clear();
-    }
-
-    public int getPlayerLives(UUID playerId) {
-        return playerLives.getOrDefault(playerId, 0);
-    }
-
     private void updateScoreboard() {
         int active = participantManager.getActiveParticipantCount();
         int total = active + participantManager.getSpectatorParticipantCount();
@@ -297,7 +266,7 @@ public class GameManager {
         scoreboardManager.updateAll(
             active, total, completedGames,
             !isPaused, currentRound, nextGame != null ? nextGame.getName() : null,
-            currentGame.getName(), spectators, playerLives,
+            currentGame.getName(), spectators, livesManager.getPlayerLivesMap(),
             configManager.getGameConfig().getMaxLives()
         );
     }
@@ -311,20 +280,6 @@ public class GameManager {
                 player.setExp(Math.min(1.0f, Math.max(0.0f, progress)));
             }
         }
-    }
-
-    private void clearAllParticipantsXp() {
-        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
-            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
-            if (player != null && player.isOnline()) {
-                clearPlayerXp(player);
-            }
-        }
-    }
-
-    private void clearPlayerXp(Player player) {
-        player.setLevel(0);
-        player.setExp(0f);
     }
 
     private void startNextMinigame() {
@@ -344,25 +299,20 @@ public class GameManager {
         timer = currentGame.getDurationSeconds();
         maxTimer = timer;
 
-        roundStartActivePlayers = new HashSet<>();
-        for (GamePlayer gp : participantManager.getActiveParticipants()) {
-            roundStartActivePlayers.add(gp.getUuid());
-        }
+        livesManager.snapshotRoundStart(participantManager.getActiveParticipants());
 
-        teleportActiveParticipantsToArenas();
+        teleportManager.teleportActivePlayers(currentGame, currentArenas);
         currentGame.onStart(currentArenas, this);
 
-        // Apply starting inventories after onStart (allows minigames to initialize teams/data first)
-        for (UUID playerId : playerArenaAssignments.keySet()) {
+        for (UUID playerId : teleportManager.getPlayerArenaAssignments().keySet()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline() && !participantManager.isPlayerSpectator(playerId)) {
                 currentGame.onGamePlayerSpawn(player);
             }
         }
 
-        teleportSpectatorsToArena();
+        teleportManager.teleportSpectators(currentGame, currentArenas);
 
-        // Register minigame events if it implements Listener
         if (currentGame instanceof org.bukkit.event.Listener listener) {
             Bukkit.getPluginManager().registerEvents(listener, plugin);
         }
@@ -371,8 +321,8 @@ public class GameManager {
     }
 
     private void prepareNextMinigame() {
-        GameSelectionContext selectionContext = buildSelectionContext(currentRound + 1);
-        List<Minigame> selectableGames = getSelectableGames(selectionContext);
+        GameSelectionContext selectionContext = gameSelector.buildSelectionContext(currentRound + 1, participantManager);
+        List<Minigame> selectableGames = gameSelector.getSelectableGames(selectionContext);
 
         if (selectableGames.isEmpty()) {
             nextGame = null;
@@ -394,14 +344,15 @@ public class GameManager {
 
     private void stopCurrentMinigame() {
         String gameName = currentGame.getName();
-        lastGame = currentGame;
+        gameSelector.setLastGame(currentGame);
+
+        java.util.Set<java.util.UUID> losers = currentGame.getLosers(this);
 
         currentGame.onEnd(this);
-        applyLivesAndRecordSurvival();
+        livesManager.applyRoundResult(participantManager, scoreboardManager, losers);
         arenaSlotManager.free(currentArenas);
         currentArenas = Collections.emptyList();
-        playerSpawnLocations.clear();
-        playerArenaAssignments.clear();
+        teleportManager.clear();
 
         participantManager.clearDisconnectedDuringGamePlayers();
         clearAllParticipantsInventories();
@@ -413,65 +364,8 @@ public class GameManager {
         maxTimer = timer;
         Bukkit.broadcastMessage(String.format(Constants.GAME_MANAGER_BREAK_TIME, timer));
 
-        teleportToLobby();
+        teleportManager.teleportToLobby(lobbyGame, lobbyArenas);
         prepareNextMinigame();
-    }
-
-    private void teleportToLobby() {
-        if (lobbyArenas.isEmpty()) return;
-        
-        ArenaInstance lobby = lobbyArenas.getFirst();
-
-        List<GamePlayer> players = participantManager.getParticipants();
-        for (int i = 0; i < players.size(); i++) {
-            GamePlayer gamePlayer = players.get(i);
-            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
-            if (player == null || !player.isOnline()) continue;
-
-            boolean isSpectator = participantManager.isPlayerSpectator(player.getUniqueId());
-            Location spawn = isSpectator ? lobbyGame.getSpectatorSpawnLocation(lobby, random) : lobbyGame.getSpawnLocation(lobby, random, i, players.size());
-            
-            playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
-            playerArenaAssignments.put(player.getUniqueId(), lobby);
-            player.teleport(spawn);
-            resetForLobby(player, GameMode.ADVENTURE);
-            if (isSpectator) {
-                lobbyGame.onGameSpectatorSpawn(player);
-            } else {
-                lobbyGame.onGamePlayerSpawn(player);
-            }
-        }
-    }
-
-    private void resetForLobby(Player player, GameMode gameMode) {
-        // Reset GENERIC_MAX_HEALTH to its vanilla default (e.g. Dropper sets it to 1)
-        var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth != null) {
-            maxHealth.setBaseValue(maxHealth.getDefaultValue());
-        }
-
-        // Remove all potion effects except Night Vision
-        for (PotionEffect effect : player.getActivePotionEffects()) {
-            if (effect.getType() != PotionEffectType.NIGHT_VISION) {
-                player.removePotionEffect(effect.getType());
-            }
-        }
-
-        player.setGameMode(gameMode);
-        player.setInvulnerable(true);
-        player.setAbsorptionAmount(0);
-        player.setAllowFlight(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
-        player.setFlying(gameMode == GameMode.CREATIVE || gameMode == GameMode.SPECTATOR);
-        player.setCollidable(true);
-        healPlayer(player);
-    }
-
-    private void healPlayer(Player player) {
-        var maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-        if (maxHealth != null) player.setHealth(maxHealth.getValue());
-        player.setFoodLevel(20);
-        player.setSaturation(5.0f);
-        player.setFireTicks(0);
     }
 
     private void showStartCountdown(int secondsRemaining) {
@@ -491,97 +385,21 @@ public class GameManager {
         });
     }
 
-    private List<Minigame> getSelectableGames(GameSelectionContext selectionContext) {
-        int minRequired = configManager.getGameConfig().getMinPlayersToContinue();
-
-        // 1. Identify all enabled and selectable games (ignoring consecutive rule for now)
-        List<Minigame> availableGames = new ArrayList<>();
-        for (Minigame game : games) {
-            if (configManager.getGameConfig().isGameEnabled(game.getName()) 
-                && game.canBeSelected(selectionContext)
-                && selectionContext.activeParticipantCount() >= minRequired) {
-                availableGames.add(game);
+    private void clearAllParticipantsInventories() {
+        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                PlayerUtils.clearInventory(player);
             }
         }
-
-        if (availableGames.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        boolean preventConsecutive = configManager.getGameConfig().isPreventSameGameConsecutively();
-
-        // 2. If the consecutive rule is disabled, or no last game exists, or only 1 game is available, 
-        // return all available games (no filtering needed).
-        if (!preventConsecutive || lastGame == null || availableGames.size() <= 1) {
-            return availableGames;
-        }
-
-        // 3. Apply the consecutive filter
-        List<Minigame> filteredGames = new ArrayList<>();
-        for (Minigame game : availableGames) {
-            if (!game.getName().equals(lastGame.getName())) {
-                filteredGames.add(game);
-            }
-        }
-
-        // 4. Safety: if filtering removed everything (shouldn't happen if size > 1), return all available
-        return filteredGames.isEmpty() ? availableGames : filteredGames;
     }
 
-    private GameSelectionContext buildSelectionContext(int roundNumber) {
-        int activeParticipantCount = participantManager.getActiveParticipantCount();
-        int spectatorCount = participantManager.getSpectatorParticipantCount();
-        int totalParticipantCount = activeParticipantCount + spectatorCount;
-        return new GameSelectionContext(roundNumber, activeParticipantCount, spectatorCount, totalParticipantCount);
-    }
-
-    private void teleportSpectatorsToArena() {
-        if (currentArenas.isEmpty()) return;
-        ArenaInstance arena = currentArenas.getFirst();
-
-        for (GamePlayer spec : participantManager.getSpectatorParticipants()) {
-            Player player = Bukkit.getPlayer(spec.getUuid());
-            if (player == null || !player.isOnline()) continue;
-
-            Location spawn = currentGame.getSpectatorSpawnLocation(arena, random);
-            if (spawn.getWorld() == null) continue;
-            playerSpawnLocations.put(player.getUniqueId(), spawn.clone());
-            playerArenaAssignments.put(player.getUniqueId(), arena);
-            player.teleport(spawn);
-            currentGame.onGameSpectatorSpawn(player);
-        }
-    }
-
-    private void teleportActiveParticipantsToArenas() {
-        if (currentGame == null || currentArenas.isEmpty()) {
-            return;
-        }
-
-        // Shuffle and group players using the participant manager
-        int playersPerArena = Math.max(1, participantManager.getActiveParticipantCount() / currentArenas.size());
-        List<List<GamePlayer>> playersByArena = participantManager.createActiveGroups(playersPerArena);
-
-        for (int arenaIndex = 0; arenaIndex < playersByArena.size() && arenaIndex < currentArenas.size(); arenaIndex++) {
-            ArenaInstance arena = currentArenas.get(arenaIndex);
-            List<GamePlayer> playersInArena = playersByArena.get(arenaIndex);
-            for (int playerIndex = 0; playerIndex < playersInArena.size(); playerIndex++) {
-                GamePlayer gamePlayer = playersInArena.get(playerIndex);
-                Player player = Bukkit.getPlayer(gamePlayer.getUuid());
-                if (player == null || !player.isOnline()) {
-                    continue;
-                }
-
-                var spawnLocation = currentGame.getSpawnLocation(arena, random, playerIndex, playersInArena.size());
-                if (spawnLocation.getWorld() == null) {
-                    plugin.getLogger().warning(String.format(Constants.LOGGER_TELEPORT_WORLD_NULL, player.getName()));
-                    continue;
-                }
-                playerSpawnLocations.put(player.getUniqueId(), spawnLocation.clone());
-                playerArenaAssignments.put(player.getUniqueId(), arena);
-                player.teleport(spawnLocation);
-                
-                clearPlayerInventory(player);
-                healPlayer(player);
+    private void clearAllParticipantsXp() {
+        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
+            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
+            if (player != null && player.isOnline()) {
+                player.setLevel(0);
+                player.setExp(0f);
             }
         }
     }
@@ -615,79 +433,53 @@ public class GameManager {
     }
 
     public Location getPlayerSpawnLocation(UUID playerId) {
-        return playerSpawnLocations.get(playerId);
+        return teleportManager.getPlayerSpawn(playerId);
     }
 
-    // Picks a new random spawn for the player (via the current minigame's respawn logic), stores and returns it.
-    // Returns null if the player has no arena assignment or no game is running.
     public Location rerandomizePlayerSpawn(UUID playerId) {
-        ArenaInstance arena = playerArenaAssignments.get(playerId);
-        if (arena == null || currentGame == null) return null;
-        Location newSpawn = currentGame.getRespawnLocation(playerId, arena, random);
-        playerSpawnLocations.put(playerId, newSpawn.clone());
-        return newSpawn;
+        return teleportManager.rerandomizePlayerSpawn(playerId, currentGame);
     }
 
     public ArenaInstance getPlayerArena(UUID playerId) {
-        return playerArenaAssignments.get(playerId);
+        return teleportManager.getPlayerArena(playerId);
     }
 
     public Map<UUID, ArenaInstance> getPlayerArenaAssignments() {
-        return Collections.unmodifiableMap(playerArenaAssignments);
+        return teleportManager.getPlayerArenaAssignments();
     }
 
     public Map<UUID, Location> getPlayerSpawnLocations() {
-        return Collections.unmodifiableMap(playerSpawnLocations);
+        return teleportManager.getPlayerSpawnLocations();
     }
 
-    /**
-     * Finds the arena at the given location, if any (checks both current minigame arenas and the lobby).
-     * @param location The location to check.
-     * @return The ArenaInstance at that location, or null if none.
-     */
     public ArenaInstance getArenaAt(Location location) {
-        // Check current minigame arenas
-        for (ArenaInstance arena : currentArenas) {
-            if (arena.contains(location)) return arena;
-        }
-        // Check lobby
-        for (ArenaInstance arena : lobbyArenas) {
-            if (arena.contains(location)) return arena;
-        }
-        return null;
+        return teleportManager.getArenaAt(location, currentArenas, lobbyArenas);
     }
 
-    /**
-     * Checks if the given location is within a lobby arena.
-     * @param location The location to check.
-     * @return True if inside a lobby arena, false otherwise.
-     */
     public boolean isInLobby(Location location) {
-        for (ArenaInstance arena : lobbyArenas) {
-            if (arena.contains(location)) return true;
-        }
-        return false;
+        return teleportManager.isInLobby(location, lobbyArenas);
     }
 
     public boolean eliminatePlayer(UUID playerId) {
         return participantManager.eliminatePlayer(playerId);
     }
 
+    public void setupPlayerAsSpectator(Player player) {
+        if (currentGame == null) return;
+        List<ArenaInstance> arenas = isPaused ? lobbyArenas : currentArenas;
+        teleportManager.teleportSingleSpectator(player, currentGame, arenas);
+    }
+
     public boolean isPlayerSpectator(UUID playerId) {
         return participantManager.isPlayerSpectator(playerId);
     }
 
-    private void clearAllParticipantsInventories() {
-        for (GamePlayer gamePlayer : participantManager.getParticipants()) {
-            Player player = Bukkit.getPlayer(gamePlayer.getUuid());
-            if (player != null && player.isOnline()) {
-                PlayerUtils.clearInventory(player);
-            }
-        }
-    }
-
     public void clearPlayerInventory(Player player) {
         PlayerUtils.clearInventory(player);
+    }
+
+    public int getPlayerLives(UUID playerId) {
+        return livesManager.getPlayerLives(playerId);
     }
 
     public enum LeaveResult {
